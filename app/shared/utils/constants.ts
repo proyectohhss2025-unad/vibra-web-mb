@@ -1,0 +1,11 @@
+const FORMAT_DATE_SHORT = 'YYYY/MM/DD';
+const FORMAT_DATE_LONG = 'YYYY/MM/DD HH:mm:ss';
+const FORMAT_DATE_MEDIUM = 'YYYY/MM/DD hh:mm';
+const LOCALE = 'es-CO';
+const MAX_SCORE = 100;
+
+export {
+    FORMAT_DATE_LONG,
+    FORMAT_DATE_MEDIUM, FORMAT_DATE_SHORT, LOCALE,
+    MAX_SCORE
+};
