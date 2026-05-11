@@ -17,6 +17,8 @@ import CustomButton from '@/shared/components/ui/CustomButton';
 import EmotionBoxScreen from './EmotionBoxScreen';
 import DiceGameActivity from '../components/DiceGameActivity';
 import DiceGameScreen from './DiceGameScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getSafeKeyObjectFromStorage } from '@/shared/utils/safe-token-storage';
 
 const DailyActivityScreen = () => {
     const tailwind = useTailwind();
@@ -30,6 +32,15 @@ const DailyActivityScreen = () => {
     const maxScore = calculateMaxScore(data?.activity?.questions?.length || 0);
     const [animate, setAnimate] = useState(false);
     const animation = useRef(new Animated.Value(0)).current;
+
+    // Función para obtener userId del storage
+    const getUserId = async () => {
+        if (Platform.OS === 'web') {
+            return getSafeKeyObjectFromStorage('userId');
+        } else {
+            return await AsyncStorage.getItem('userId');
+        }
+    };
 
     useEffect(() => {
         if (animate) {
@@ -64,10 +75,12 @@ const DailyActivityScreen = () => {
     const handleSubmit = async (answers: Record<string, string>) => {
         if (!data) return;
 
-        console.log("Submitting user:", user?.id);
+        // Obtener userId del storage
+        const userId = await getUserId();
+        console.log("Submitting user:", userId);
         const responseDto: any = {
             activityId: data.activity?._id,
-            userId: user.id,
+            userId: userId,
             answers: Object.entries(answers).map(([questionId, answer]) => ({
                 questionId,
                 answer,
@@ -138,161 +151,167 @@ const DailyActivityScreen = () => {
     if (!data || !data.activity) return <ErrorScreen onRetry={() => { router.back() }} message={'Por favor configure una actividad para el día!'} />;
 
     return (
-        <SafeAreaView style={tailwind("flex-1 p-2 bg-gray-50 w-full px-4")}>
-            <ScrollView contentContainerStyle={tailwind("flex-grow")} showsVerticalScrollIndicator={true}>
-                <View style={styles.container}>
-                    {activityType === 'Question' && <>
-                        {currentStep} - {data.activity?.questions?.length}
-                        <View style={styles.buttonContainer}>
-                            {currentStep < data.activity?.questions?.length && (<>
-                                <View style={styles.headerContainer}>
-                                    <Text style={[{ fontSize: 20, textAlign: 'center' }, tailwind('mb-2 font-semibold')]}>Emoción: {data.activity?.emotion?.name}</Text>
-                                    <ProgressBarII total={data.activity?.resources?.length - 1} current={currentStep} />
-                                </View>
-                                <View style={styles.listContainer}>
-                                    <MediaPlayer
-                                        resource={data.activity?.resources[currentStep]}
-                                        onComplete={() => currentStep < data.activity?.resources?.length && actions.nextStep()}
-                                    />
-                                </View>
-
-                                <QuestionSection
-                                    questions={data.activity?.questions[currentStep]}
-                                    onSubmit={handleSubmit}
-                                    isLastQuestion={currentStep === data.activity?.questions?.length - 1}
-                                />
-                            </>
-                            )}
-                            <View style={styles.scoreContainer}>
-                                <ScoreCounter
-                                    currentScore={currentScore}
-                                    maxScore={maxScore}
-                                />
-                            </View>
-                            {(currentStep >= data.activity?.questions?.length - 1) && (
-                                <View style={[tailwind('mt-4 flex items-center justify-center'), styles.transitionButtonContainer]}>
-                                    <Text style={tailwind('text-center mb-2 text-gray-700')}>¿Listo para la siguiente actividad?</Text>
-                                    <View style={tailwind('py-2 px-4 rounded-lg')}>
-                                        <CustomButton
-                                            title="Continuar"
-                                            variantColor='blue'
-                                            neonEffect={true}
-                                            onPress={() => {
-                                                actions.nextActivityType();
-                                                // actions.reset();
-                                            }}
-                                            icon="arrow-forward"
+        <SafeAreaView style={tailwind("flex-1 bg-gray-50 w-full")}>
+            {/* Contenedor principal con distribución flex */}
+            <View style={tailwind("flex-1 flex flex-col")}>
+                {/* Área de contenido scrolleable - ocupa todo el espacio disponible */}
+                <ScrollView 
+                    contentContainerStyle={tailwind("flex-grow py-2 px-4")} 
+                    showsVerticalScrollIndicator={true}
+                    style={tailwind("flex-1")}
+                >
+                    <View style={styles.container}>
+                        {activityType === 'Question' && <>
+                            {currentStep} - {data.activity?.questions?.length}
+                            <View style={styles.buttonContainer}>
+                                {currentStep < data.activity?.questions?.length && (<>
+                                    <View style={styles.headerContainer}>
+                                        <Text style={[{ fontSize: 20, textAlign: 'center' }, tailwind('mb-2 font-semibold')]}>Emoción: {data.activity?.emotion?.name}</Text>
+                                        <ProgressBarII total={data.activity?.resources?.length - 1} current={currentStep} />
+                                    </View>
+                                    <View style={styles.listContainer}>
+                                        <MediaPlayer
+                                            resource={data.activity?.resources[currentStep]}
+                                            onComplete={() => currentStep < data.activity?.resources?.length && actions.nextStep()}
                                         />
                                     </View>
+
+                                    <QuestionSection
+                                        questions={data.activity?.questions[currentStep]}
+                                        onSubmit={handleSubmit}
+                                        isLastQuestion={currentStep === data.activity?.questions?.length - 1}
+                                    />
+                                </>
+                                )}
+                                <View style={styles.scoreContainer}>
+                                    <ScoreCounter
+                                        currentScore={currentScore}
+                                        maxScore={maxScore}
+                                    />
                                 </View>
-                            )}
+                            </View>
+                        </>}
+
+                        {activityType === 'WordSearch' &&
+                            <View style={[styles.gameContainer, tailwind('mb-4')]}>
+                                <Text style={[styles.gameTitle, tailwind('text-xl font-bold mb-2')]}>Sopa de Letras</Text>
+                                <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Encuentra todas las palabras ocultas en la cuadrícula para ganar puntos.</Text>
+                                <WordSearchGame
+                                    words={['ESPERANZA', 'HONESTO', 'AMOR', 'EMPATIA', 'VIBRA', 'HUMILDAD']}
+                                    gridSize={9}
+                                    timeLimit={300}
+                                    activityId="word-search-activity"
+                                />
+                            </View>}
+
+                        {activityType === 'MatchingConcepts' &&
+                            <View style={[styles.gameContainer, tailwind('mb-4')]}>
+                                <Text style={[styles.gameTitle, tailwind('text-xl font-bold mb-2')]}>Emparejar conceptos</Text>
+                                <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Relaciona cada concepto con su definición correspondiente para ganar puntos.</Text>
+                                <MatchingConceptsGame
+                                    conceptPairs={[
+                                        { id: '1', concept: 'Vibra', match: 'App para captura de emociones' },
+                                        { id: '2', concept: 'Actividad', match: 'Accion para medir emociones' },
+                                        { id: '3', concept: 'Reto', match: 'Competencias de emociones' },
+                                        { id: '4', concept: 'EPersonal', match: 'Eventos personales' },
+                                        { id: '5', concept: 'Ranking', match: 'Nivel entre la comunidad' },
+                                    ]}
+                                    timeLimit={180}
+                                    activityId="matching-concepts-activity"
+                                />
+                            </View>}
+
+                        {activityType === 'EmotionBox' &&
+                            <View style={[styles.gameContainer, tailwind('mb-4')]}>
+                                <Text style={[styles.gameTitle, tailwind('text-xl font-bold mb-2')]}>Caja de emociones</Text>
+                                <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Relaciona cada emocion con su respectivo emoticon.</Text>
+                                <EmotionBoxScreen />
+                            </View>}
+
+                        {activityType === 'DiceGame' &&
+                            <View style={[styles.gameContainer, tailwind('mb-4')]}>
+                                <Text style={[styles.gameTitle, tailwind('text-xl font-bold mb-2')]}>Juego de dados</Text>
+                                <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Lanza los dados y acierta en las preguntas.</Text>
+                                <DiceGameScreen />
+                            </View>}
+                    </View>
+                </ScrollView>
+
+                {/* Card de transición FIJO en la parte inferior */}
+                <View style={styles.fixedBottomCard}>
+                    {activityType === 'Question' && currentStep >= data.activity?.questions?.length - 1 && (
+                        <View style={tailwind('flex items-center justify-center py-3 px-4')}>
+                            <Text style={tailwind('text-center mb-2 text-gray-700 text-base font-medium')}>¿Listo para la siguiente actividad?</Text>
+                            <CustomButton
+                                title="Continuar"
+                                variantColor='blue'
+                                neonEffect={true}
+                                onPress={() => {
+                                    actions.nextActivityType();
+                                }}
+                                icon="arrow-forward"
+                            />
                         </View>
-                    </>}
-
-                    {activityType === 'WordSearch' &&
-                        <View style={[styles.gameContainer, tailwind('mt-4 mb-6')]}>
-                            <Text style={[styles.gameTitle, tailwind('text-xl font-bold mb-2')]}>Sopa de Letras</Text>
-                            <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Encuentra todas las palabras ocultas en la cuadrícula para ganar puntos.</Text>
-                            <WordSearchGame
-                                words={['ESPERANZA', 'HONESTO', 'AMOR', 'EMPATIA', 'VIBRA', 'HUMILDAD']}
-                                gridSize={9}
-                                timeLimit={300}
-                                activityId="word-search-activity"
+                    )}
+                    {activityType === 'WordSearch' && (
+                        <View style={tailwind('flex items-center justify-center py-3 px-4')}>
+                            <Text style={tailwind('text-center mb-2 text-gray-700 text-base font-medium')}>¿Listo para la siguiente actividad?</Text>
+                            <CustomButton
+                                title="Continuar a Emparejar Conceptos"
+                                variantColor='blue'
+                                neonEffect={true}
+                                onPress={() => {
+                                    actions.nextActivityType();
+                                }}
+                                icon="arrow-forward"
                             />
-                            <View style={[tailwind('mt-4 flex items-center justify-center'), styles.transitionButtonContainer]}>
-                                <Text style={tailwind('text-center mb-2 text-gray-700')}>¿Listo para la siguiente actividad?</Text>
-                                <View style={tailwind('bg-blue-500 py-2 px-4 rounded-lg')}>
-                                    <CustomButton
-                                        title="Continuar a Emparejar Conceptos"
-                                        variantColor='blue'
-                                        neonEffect={true}
-                                        onPress={() => {
-                                            actions.nextActivityType();
-                                            //actions.reset();
-                                        }}
-                                        icon="arrow-forward"
-                                    />
-                                </View>
-                            </View>
-                        </View>}
-
-                    {activityType === 'MatchingConcepts' &&
-                        <View style={[styles.gameContainer, tailwind('mt-4 mb-6')]}>
-                            <Text style={[styles.gameTitle, tailwind('text-xl font-bold mb-2')]}>Emparejar conceptos</Text>
-                            <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Relaciona cada concepto con su definición correspondiente para ganar puntos.</Text>
-                            <MatchingConceptsGame
-                                conceptPairs={[
-                                    { id: '1', concept: 'Vibra', match: 'App para captura de emociones' },
-                                    { id: '2', concept: 'Actividad', match: 'Accion para medir emociones' },
-                                    { id: '3', concept: 'Reto', match: 'Competencias de emociones' },
-                                    { id: '4', concept: 'EPersonal', match: 'Eventos personales' },
-                                    { id: '5', concept: 'Ranking', match: 'Nivel entre la comunidad' },
-                                ]}
-                                timeLimit={180}
-                                activityId="matching-concepts-activity"
+                        </View>
+                    )}
+                    {activityType === 'MatchingConcepts' && (
+                        <View style={tailwind('flex items-center justify-center py-3 px-4')}>
+                            <Text style={tailwind('text-center mb-2 text-gray-700 text-base font-medium')}>¿Listo para la siguiente actividad?</Text>
+                            <CustomButton
+                                title="Continuar a la caja de emociones"
+                                variantColor='blue'
+                                neonEffect={true}
+                                onPress={() => {
+                                    actions.nextActivityType();
+                                }}
+                                icon="arrow-forward"
                             />
-                            <View style={[tailwind('mt-4 flex items-center justify-center'), styles.transitionButtonContainer]}>
-                                <Text style={tailwind('text-center mb-2 text-gray-700')}>¿Listo para la siguiente actividad?</Text>
-                                <View style={tailwind('bg-blue-500 py-2 px-4 rounded-lg')}>
-                                    <CustomButton
-                                        title="Continuar a la caja de emociones"
-                                        variantColor='blue'
-                                        neonEffect={true}
-                                        onPress={() => {
-                                            actions.nextActivityType();
-                                            //actions.reset();
-                                        }}
-                                        icon="arrow-forward"
-                                    />
-                                </View>
-                            </View>
-                        </View>}
-
-                    {activityType === 'EmotionBox' &&
-                        <View style={[styles.gameContainer, tailwind('mt-4 mb-6')]}>
-                            <Text style={[styles.gameTitle, tailwind('text-xl font-bold mb-2')]}>Caja de emociones</Text>
-                            <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Relaciona cada emocion con su respectivo emoticon.</Text>
-                            <EmotionBoxScreen />
-                            <View style={[tailwind('mt-4 flex items-center justify-center'), styles.transitionButtonContainer]}>
-                                <Text style={tailwind('text-center mb-2 text-gray-700')}>¿Listo para la siguiente actividad?</Text>
-                                <View style={tailwind('bg-blue-500 py-2 px-4 rounded-lg')}>
-                                    <CustomButton
-                                        title="Continuar a juego de dados"
-                                        variantColor='blue'
-                                        neonEffect={true}
-                                        onPress={() => {
-                                            actions.nextActivityType();
-                                            //actions.reset();
-                                        }}
-                                        icon="arrow-forward"
-                                    />
-                                </View>
-                            </View>
-                        </View>}
-
-                    {activityType === 'DiceGame' &&
-                        <View style={[styles.gameContainer, tailwind('mt-4 mb-6')]}>
-                            <Text style={[styles.gameTitle, tailwind('text-xl font-bold mb-2')]}>Juego de dados</Text>
-                            <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Lanza los dados y acierta en las preguntas.</Text>
-                            <DiceGameScreen />
-                            <View style={[tailwind('mt-4 flex items-center justify-center'), styles.transitionButtonContainer]}>
-                                <Text style={tailwind('text-center mb-2 text-gray-700')}>¿Has completado todas las actividades?</Text>
-                                <View style={tailwind('bg-green-500 py-2 px-4 rounded-lg')}>
-                                    <CustomButton
-                                        title="Finalizar Actividades"
-                                        variantColor='green'
-                                        neonEffect={true}
-                                        onPress={() => {
-                                            actions.reset();
-                                            router.push('/features/(tabs)/one');
-                                        }}
-                                        icon="check"
-                                    />
-                                </View>
-                            </View>
-                        </View>}
+                        </View>
+                    )}
+                    {activityType === 'EmotionBox' && (
+                        <View style={tailwind('flex items-center justify-center py-3 px-4')}>
+                            <Text style={tailwind('text-center mb-2 text-gray-700 text-base font-medium')}>¿Listo para la siguiente actividad?</Text>
+                            <CustomButton
+                                title="Continuar a juego de dados"
+                                variantColor='blue'
+                                neonEffect={true}
+                                onPress={() => {
+                                    actions.nextActivityType();
+                                }}
+                                icon="arrow-forward"
+                            />
+                        </View>
+                    )}
+                    {activityType === 'DiceGame' && (
+                        <View style={tailwind('flex items-center justify-center py-3 px-4')}>
+                            <Text style={tailwind('text-center mb-2 text-gray-700 text-base font-medium')}>¿Has completado todas las actividades?</Text>
+                            <CustomButton
+                                title="Finalizar Actividades"
+                                variantColor='green'
+                                neonEffect={true}
+                                onPress={() => {
+                                    actions.reset();
+                                    router.push('/features/(tabs)/one');
+                                }}
+                                icon="check"
+                            />
+                        </View>
+                    )}
                 </View>
-            </ScrollView>
+            </View>
         </SafeAreaView>
     );
 };
@@ -363,6 +382,18 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
+    },
+    fixedBottomCard: {
+        backgroundColor: '#FFFFFF',
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 8,
     },
 });
 

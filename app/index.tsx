@@ -4,8 +4,8 @@ import * as Notifications from 'expo-notifications';
 import { SchedulableTriggerInputTypes } from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
-import { ImageBackground, Platform, StyleSheet, Text, View } from 'react-native';
-import LoginForm from './features/login/LoginForm';
+import { Platform, StyleSheet, View } from 'react-native';
+import LoginScreen from './features/auth/LoginScreen';
 // Import the global.css file in the index.js file:
 import '../global.css';
 //import messaging from '@react-native-firebase/messaging';
@@ -148,37 +148,8 @@ const Index: React.FC = () => {
   }
 
   return (
-    <ImageBackground
-      source={require('./assets/sponsors/fondo_vibra_new.jpg')}
-      style={styles.background}
-      resizeMode="cover"
-    >
-      <View style={styles.container}>
-        <LoginForm />
-        <View style={{ padding: 20, marginTop: 120 }}>
-          {/*<Text style={{ fontSize: 20, marginBottom: 1 }}>Almacenamiento en local</Text>
-          <LocalStorageComponent key="nombreUsuario" label="Nombre de Usuario" defaultValue="Invitado" />
-          <LocalStorageComponent key="ultimoAcceso" label="Último Acceso" defaultValue="ultimoAcceso" />
-          <LocalStorageComponent key="theme" label="Tema" defaultValue="light" />*/}
-        </View>
-        <Text style={{ fontSize: 16, marginBottom: 10, color: '#FFFFFF' }}>Desarrollado por equipo Vibra</Text>
-        <StatusBar style="auto" />
-      </View>
-    </ImageBackground>
+    <LoginScreen />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  background: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-  },
-});
 
 export default Index;

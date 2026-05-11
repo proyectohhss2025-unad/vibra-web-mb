@@ -6,6 +6,8 @@ import { useSubmitResponse } from '../hooks/activity';
 import useUser from '@/context/UserContext';
 import EmotionBadge from './EmotionBadge';
 import { EmotionConfig, EmotionBoxActivityProps, EmotionActivityResult, EmotionPlacement } from '../types/emotion-box';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getSafeKeyObjectFromStorage } from '@/shared/utils/safe-token-storage';
 
 // Emociones predeterminadas si no se proporcionan
 const DEFAULT_EMOTIONS: EmotionConfig[] = [
@@ -61,6 +63,15 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
     const boxPulseAnim = useRef(new Animated.Value(1)).current;
     const successAnim = useRef(new Animated.Value(0)).current;
 
+    // Función para obtener userId del storage
+    const getUserId = async () => {
+        if (Platform.OS === 'web') {
+            return getSafeKeyObjectFromStorage('userId');
+        } else {
+            return await AsyncStorage.getItem('userId');
+        }
+    };
+
     // Temporizador
     useEffect(() => {
         if (isCompleted) return;
@@ -98,7 +109,7 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
     }, []);
 
     // Función para manejar la finalización de la actividad
-    const handleActivityComplete = () => {
+    const handleActivityComplete = async () => {
         if (isCompleted) return;
 
         setIsCompleted(true);
@@ -123,9 +134,13 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
 
         setScore(finalScore);
 
+        // Obtener userId del storage
+        const userId = await getUserId();
+        console.log('EmotionBoxActivity - userId:', userId);
+
         // Preparar resultado para API
         const result: EmotionActivityResult = {
-            studentId: user?.id || '',
+            studentId: userId || '',
             score: finalScore,
             timeSpent,
             placements,
@@ -134,7 +149,7 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
         // Enviar resultado a la API
         submitResponse({
             activityId,
-            userId: user?.id || '',
+            userId: userId || '',
             answers: result,
         });
 
@@ -253,119 +268,116 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
 
     return (
         <View style={styles.container}>
-            {/* Cabecera con tiempo y puntuación */}
-            <View style={styles.header}>
-                <View style={styles.timerContainer}>
-                    <MaterialIcons name="timer" size={24} color="#4B5563" />
-                    <Text style={styles.timerText}>{formatTime(timeRemaining)}</Text>
-                </View>
+            {/* Ocultar contenido principal cuando está completado */}
+            {!isCompleted && (
+                <>
+                    {/* Cabecera con tiempo y puntuación */}
+                    <View style={styles.header}>
+                        <View style={styles.timerContainer}>
+                            <MaterialIcons name="timer" size={24} color="#4B5563" />
+                            <Text style={styles.timerText}>{formatTime(timeRemaining)}</Text>
+                        </View>
 
-                <View style={styles.scoreContainer}>
-                    <MaterialIcons name="star" size={24} color="#F59E0B" />
-                    <Text style={styles.scoreText}>{score}</Text>
-                </View>
-            </View>
-
-            {/* Instrucciones */}
-            <View style={styles.instructionsContainer}>
-                <Text style={styles.instructionsTitle}>Caja de Emociones</Text>
-                <Text style={styles.instructionsText}>
-                    Arrastra cada emoción a la caja correspondiente: "Emociones Sanas" o "Emociones por Gestionar".
-                </Text>
-            </View>
-
-            {/* Contenedor principal de la actividad */}
-            <View style={styles.activityContainer}>
-                {/* Caja de emociones sanas */}
-                <Animated.View
-                    ref={healthyBoxRef}
-                    style={[
-                        styles.emotionBox,
-                        styles.healthyBox,
-                        {
-                            transform: [
-                                { scale: currentDragEmotion ? boxPulseAnim : 1 },
-                            ],
-                        },
-                    ]}
-                    onLayout={(event) => {
-                        const { x, y, width, height } = event.nativeEvent.layout;
-                        setHealthyBoxLayout({ x, y, width, height });
-                    }}
-                >
-                    <Text style={styles.boxTitle}>Emociones Sanas</Text>
-                    <View style={styles.boxContent}>
-                        {healthyBoxEmotions.map((emotion) => (
-                            <View key={emotion.id} style={styles.placedEmotion}>
-                                <EmotionBadge emotion={emotion.name} size="small" />
-                            </View>
-                        ))}
+                        <View style={styles.scoreContainer}>
+                            <MaterialIcons name="star" size={24} color="#F59E0B" />
+                            <Text style={styles.scoreText}>{score}</Text>
+                        </View>
                     </View>
-                </Animated.View>
 
-                {/* Caja de emociones por gestionar */}
-                <Animated.View
-                    ref={manageBoxRef}
-                    style={[
-                        styles.emotionBox,
-                        styles.manageBox,
-                        {
-                            transform: [
-                                { scale: currentDragEmotion ? boxPulseAnim : 1 },
-                            ],
-                        },
-                    ]}
-                    onLayout={(event) => {
-                        const { x, y, width, height } = event.nativeEvent.layout;
-                        setManageBoxLayout({ x, y, width, height });
-                    }}
-                >
-                    <Text style={styles.boxTitle}>Emociones por Gestionar</Text>
-                    <View style={styles.boxContent}>
-                        {manageBoxEmotions.map((emotion) => (
-                            <View key={emotion.id} style={styles.placedEmotion}>
-                                <EmotionBadge emotion={emotion.name} size="small" />
-                            </View>
-                        ))}
+                    {/* Instrucciones */}
+                    <View style={styles.instructionsContainer}>
+                        <Text style={styles.instructionsTitle}>Caja de Emociones</Text>
+                        <Text style={styles.instructionsText}>
+                            Arrastra cada emoción a la caja correspondiente: "Emociones Sanas" o "Emociones por Gestionar".
+                        </Text>
                     </View>
-                </Animated.View>
-            </View>
 
-            {/* Emociones disponibles para arrastrar */}
-            <View style={styles.emotionsContainer}>
-                {availableEmotions.map((emotion) => {
-                    const { pan, panResponder } = emotionPanResponders[emotion.id];
-
-                    return (
+                    {/* Contenedor principal de la actividad */}
+                    <View style={styles.activityContainer}>
+                        {/* Caja de emociones sanas */}
                         <Animated.View
-                            key={emotion.id}
-                            style={{
-                                transform: [{ translateX: pan.x }, { translateY: pan.y }],
-                                zIndex: currentDragEmotion?.id === emotion.id ? 10 : 1,
+                            ref={healthyBoxRef}
+                            style={[
+                                styles.emotionBox,
+                                styles.healthyBox,
+                                {
+                                    transform: [
+                                        { scale: currentDragEmotion ? boxPulseAnim : 1 },
+                                    ],
+                                },
+                            ]}
+                            onLayout={(event) => {
+                                const { x, y, width, height } = event.nativeEvent.layout;
+                                setHealthyBoxLayout({ x, y, width, height });
                             }}
-                            {...panResponder.panHandlers}
                         >
-                            <View style={styles.emotionItem}>
-                                <EmotionBadge emotion={emotion.name} />
+                            <Text style={styles.boxTitle}>Emociones Sanas</Text>
+                            <View style={styles.boxContent}>
+                                {healthyBoxEmotions.map((emotion) => (
+                                    <View key={emotion.id} style={styles.placedEmotion}>
+                                        <EmotionBadge emotion={emotion.name} size="small" />
+                                    </View>
+                                ))}
                             </View>
                         </Animated.View>
-                    );
-                })}
-            </View>
+
+                        {/* Caja de emociones por gestionar */}
+                        <Animated.View
+                            ref={manageBoxRef}
+                            style={[
+                                styles.emotionBox,
+                                styles.manageBox,
+                                {
+                                    transform: [
+                                        { scale: currentDragEmotion ? boxPulseAnim : 1 },
+                                    ],
+                                },
+                            ]}
+                            onLayout={(event) => {
+                                const { x, y, width, height } = event.nativeEvent.layout;
+                                setManageBoxLayout({ x, y, width, height });
+                            }}
+                        >
+                            <Text style={styles.boxTitle}>Emociones por Gestionar</Text>
+                            <View style={styles.boxContent}>
+                                {manageBoxEmotions.map((emotion) => (
+                                    <View key={emotion.id} style={styles.placedEmotion}>
+                                        <EmotionBadge emotion={emotion.name} size="small" />
+                                    </View>
+                                ))}
+                            </View>
+                        </Animated.View>
+                    </View>
+
+                    {/* Emociones disponibles para arrastrar */}
+                    <View style={styles.emotionsContainer}>
+                        {availableEmotions.map((emotion) => {
+                            const { pan, panResponder } = emotionPanResponders[emotion.id];
+
+                            return (
+                                <Animated.View
+                                    key={emotion.id}
+                                    style={{
+                                        transform: [{ translateX: pan.x }, { translateY: pan.y }],
+                                        zIndex: currentDragEmotion?.id === emotion.id ? 10 : 1,
+                                    }}
+                                    {...panResponder.panHandlers}
+                                >
+                                    <View style={styles.emotionItem}>
+                                        <EmotionBadge emotion={emotion.name} />
+                                    </View>
+                                </Animated.View>
+                            );
+                        })}
+                    </View>
+                </>
+            )}
 
             {/* Pantalla de resultados cuando se completa */}
             {isCompleted && (
-                <Animated.View
-                    style={[
-                        styles.resultsContainer,
-                        {
-                            opacity: successAnim,
-                            transform: [{ scale: Animated.add(1, Animated.multiply(successAnim, 0.1)) }],
-                        },
-                    ]}
-                >
-                    <View style={styles.resultsContent}>
-                        <MaterialIcons name="check-circle" size={64} color="#10B981" />
+                <View style={styles.resultsOverlay}>
+                    <View style={styles.resultsCard}>
+                        <MaterialIcons name="check-circle" size={80} color="#10B981" />
                         <Text style={styles.resultsTitle}>¡Actividad Completada!</Text>
                         <Text style={styles.resultsScore}>Puntuación: {score}</Text>
                         <Text style={styles.resultsTime}>
@@ -381,21 +393,8 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
                             <Text style={styles.resultsButtonText}>Continuar</Text>
                         </TouchableOpacity>
                     </View>
-                </Animated.View>
+                </View>
             )}
-
-            {/* Animación de éxito */}
-            <Animated.View
-                style={[
-                    styles.successAnimation,
-                    {
-                        opacity: successAnim,
-                        transform: [{ scale: Animated.add(1, Animated.multiply(successAnim, 0.5)) }],
-                    },
-                ]}
-            >
-                <MaterialIcons name="check-circle" size={100} color="#10B981" />
-            </Animated.View>
         </View>
     );
 };
@@ -521,50 +520,65 @@ const styles = StyleSheet.create({
     },
     resultsContainer: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        zIndex: 100,
+        paddingHorizontal: 20,
+        paddingTop: 60,
+        paddingBottom: 40,
+    },
+    resultsOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(16, 185, 129, 0.95)',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 100,
     },
-    resultsContent: {
+    resultsCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 24,
+        borderRadius: 24,
+        padding: 40,
         alignItems: 'center',
+        justifyContent: 'center',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 5,
-        width: '80%',
-        maxWidth: 400,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+        elevation: 10,
+        width: '95%',
+        maxWidth: 380,
+        minHeight: 400,
     },
     resultsTitle: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#111827',
-        marginTop: 16,
-        marginBottom: 8,
+        marginTop: 20,
+        marginBottom: 16,
+        textAlign: 'center',
     },
     resultsScore: {
-        fontSize: 18,
-        color: '#4B5563',
-        marginBottom: 8,
+        fontSize: 22,
+        fontWeight: '600',
+        color: '#10B981',
+        marginBottom: 12,
     },
     resultsTime: {
         fontSize: 18,
-        color: '#4B5563',
-        marginBottom: 24,
+        color: '#6B7280',
+        marginBottom: 32,
     },
     resultsButton: {
-        backgroundColor: '#3B82F6',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 8,
+        backgroundColor: '#10B981',
+        paddingHorizontal: 40,
+        paddingVertical: 16,
+        borderRadius: 12,
+        marginTop: 8,
     },
     resultsButtonText: {
         color: '#FFFFFF',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
     },
     successAnimation: {

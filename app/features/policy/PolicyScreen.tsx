@@ -19,7 +19,7 @@ const PolicyScreen = () => {
     useEffect(() => {
         const fetchPolicies = async () => {
             try {
-                const response = await api.get('/policies');
+                const response = await api.get('/api/policies');
                 console.log('Policies:', response.data);
                 setPolicies(response.data);
             } catch (err) {
@@ -54,7 +54,7 @@ const PolicyScreen = () => {
         }
         setPoliciesAccepted(true);
         try {
-            const resSendApprovedPolicies = await api.post('/policies/accept-multiple', {
+            const resSendApprovedPolicies = await api.post('/api/policies/accept-multiple', {
                 userId: '67c21ed4f905699888106f03',
                 policyIds: policies.map((policy: any) => policy._id),
             });

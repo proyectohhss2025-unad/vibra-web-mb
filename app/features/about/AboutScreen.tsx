@@ -1,9 +1,13 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { Animated, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomButton from '../../shared/components/ui/CustomButton';
 import { useTailwind } from 'tailwind-rn';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialIcons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
 
 const sponsors = [
     {
@@ -31,35 +35,68 @@ const sponsors = [
 
 const developers = [
     {
-        id: 2,
+        id: 1,
         name: 'Ermes Guarnizo Motta',
         role: 'Designer and Product Owner',
         avatar: require('../../assets/sponsors/ermes_guarnizo_motta.jpeg'),
         bio: 'Diseñador UX/UI con experiencia en la creación de experiencias de usuario intuitivas y atractivas. Product Owner del proyecto Vibra.'
     },
     {
-        id: 1,
+        id: 2,
         name: 'Yovany Suárez Silva',
-        role: 'Software engineer and Lead developer',
+        role: 'Software Engineer & Lead Developer',
         avatar: require('../../assets/sponsors/6803296.jpeg'),
         bio: 'Ingeniero de software con amplia experiencia en desarrollo de aplicaciones móviles y web. Líder técnico del proyecto Vibra.'
+    },
+    {
+        id: 3,
+        name: 'Lic. Javier Miranda',
+        role: 'Líder de Investigación',
+        avatar: require('../../assets/sponsors/javier_miranda.png'), // Placeholder - replace with actual image
+        bio: 'Licenciado con amplia experiencia en investigación. Líder del equipo de investigación del proyecto Vibra.'
     }
 ];
 
 const AboutScreen = () => {
     const router = useRouter();
     const tailwind = useTailwind();
-    const fadeAnim = new Animated.Value(0);
+
+    // Animations
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const shimmerAnim = useRef(new Animated.Value(0)).current;
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+
+    // Modal state
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedItem, setSelectedItem] = useState<any>(null);
     const [itemType, setItemType] = useState('');
 
+    // Card press state
+    const [pressedCardId, setPressedCardId] = useState<number | null>(null);
+
     useEffect(() => {
+        // Fade in animation
         Animated.timing(fadeAnim, {
             toValue: 1,
-            duration: 1000,
+            duration: 800,
             useNativeDriver: true,
         }).start();
+
+        // Shimmer animation (continuous)
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(shimmerAnim, {
+                    toValue: 1,
+                    duration: 1500,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(shimmerAnim, {
+                    toValue: 0,
+                    duration: 1500,
+                    useNativeDriver: true,
+                }),
+            ])
+        ).start();
     }, []);
 
     const handleItemPress = (item: any, type: any) => {
@@ -68,74 +105,143 @@ const AboutScreen = () => {
         setModalVisible(true);
     };
 
+    const handleCardPressIn = (id: number) => {
+        setPressedCardId(id);
+        Animated.spring(scaleAnim, {
+            toValue: 0.95,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const handleCardPressOut = () => {
+        setPressedCardId(null);
+        Animated.spring(scaleAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    // Shimmer overlay component
+    const ShimmerOverlay = () => {
+        const translateX = shimmerAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [-200, 200],
+        });
+
+        return (
+            <Animated.View
+                style={[
+                    styles.shimmerOverlay,
+                    {
+                        transform: [{ translateX }],
+                    },
+                ]}
+            />
+        );
+    };
+
+    // Card component with glassmorphism and animations
+    const GlassCard = ({ item, type, onPress }: { item: any; type: string; onPress: () => void }) => {
+        const isPressed = pressedCardId === item.id;
+
+        return (
+            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPressIn={() => handleCardPressIn(item.id)}
+                    onPressOut={handleCardPressOut}
+                    onPress={onPress}
+                >
+                    <View style={styles.glassCard}>
+                        <ShimmerOverlay />
+                        {type === 'sponsor' ? (
+                            <Image
+                                source={item.logo}
+                                style={styles.sponsorImage}
+                                resizeMode="contain"
+                            />
+                        ) : (
+                            <Image
+                                source={item.avatar}
+                                style={styles.avatarImage}
+                            />
+                        )}
+                        <Text style={styles.cardTitle}>{item.name}</Text>
+                        {type === 'sponsor' ? (
+                            <Text style={styles.cardDescription}>{item.description}</Text>
+                        ) : (
+                            <Text style={styles.cardRole}>{item.role}</Text>
+                        )}
+                    </View>
+                </TouchableOpacity>
+            </Animated.View>
+        );
+    };
+
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <ScrollView style={styles.scrollView}>
-                <Animated.View style={[styles.animatedView, { opacity: modalVisible ? fadeAnim : 1 }]}>
-                    <Text style={styles.title}>
-                        Acerca del equipo Vibra
-                    </Text>
+                <Animated.View style={[styles.animatedView, { opacity: fadeAnim }]}>
+                    {/* Header with gradient */}
+                    <View style={styles.headerContainer}>
+                        <LinearGradient
+                            colors={['#0066FF', '#00CCFF']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.headerGradient}
+                        >
+                            <MaterialIcons name="groups" size={28} color="white" style={styles.headerIcon} />
+                            <Text style={styles.headerTitle}>Acerca del equipo Vibra</Text>
+                        </LinearGradient>
+                    </View>
+
+                    {/* Sponsors section */}
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>
-                            Nuestros patrocinadores
-                        </Text>
+                        <Text style={styles.sectionTitle}>Nuestros patrocinadores</Text>
                         <View style={styles.cardContainer}>
                             {sponsors.map((sponsor) => (
-                                <TouchableOpacity
+                                <GlassCard
                                     key={sponsor.id}
+                                    item={sponsor}
+                                    type="sponsor"
                                     onPress={() => handleItemPress(sponsor, 'sponsor')}
-                                >
-                                    <View style={styles.card}>
-                                        <Image
-                                            source={sponsor.logo}
-                                            style={styles.sponsorImage}
-                                            resizeMode="contain"
-                                        />
-                                        <Text style={styles.cardTitle}>{sponsor.name}</Text>
-                                        <Text style={styles.cardDescription}>
-                                            {sponsor.description}
-                                        </Text>
-                                    </View>
-                                </TouchableOpacity>
+                                />
                             ))}
                         </View>
                     </View>
+
+                    {/* Developers section */}
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>
-                            Equipo de ingeniería y desarrollo
-                        </Text>
+                        <Text style={styles.sectionTitle}>Equipo de ingeniería y desarrollo</Text>
                         <View style={styles.cardContainer}>
                             {developers.map((dev) => (
-                                <TouchableOpacity
+                                <GlassCard
                                     key={dev.id}
+                                    item={dev}
+                                    type="developer"
                                     onPress={() => handleItemPress(dev, 'developer')}
-                                >
-                                    <View style={styles.card}>
-                                        <Image
-                                            source={dev.avatar}
-                                            style={styles.avatarImage}
-                                        />
-                                        <Text style={styles.cardTitle}>{dev.name}</Text>
-                                        <Text style={styles.cardRole}>{dev.role}</Text>
-                                    </View>
-                                </TouchableOpacity>
+                                />
                             ))}
                         </View>
                     </View>
                 </Animated.View>
             </ScrollView>
 
-            <CustomButton
-                title="Ir atras"
-                onPress={() => router.back()}
-                style={{ fontSize: 22, marginHorizontal: 20, marginBottom: 20 }}
-                icon={"arrow-right"}
-                iconPosition="right"
-                iconSize={24}
-                neonEffect={true}
-                variantColor="red"
-            />
+            {/* Back button */}
+            <View style={styles.backButtonContainer}>
+                <CustomButton
+                    title="Ir atrás"
+                    onPress={() => router.back()}
+                    icon="arrow-right"
+                    iconPosition="right"
+                    iconSize={24}
+                    neonEffect={true}
+                    variantColor="blue"
+                    style={styles.backButton}
+                />
+            </View>
 
+            {/* Modal - Style like Login recover modal */}
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -143,14 +249,23 @@ const AboutScreen = () => {
                 onRequestClose={() => setModalVisible(false)}
             >
                 <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
+                    <View style={styles.modalView}>
                         {selectedItem && (
                             <>
-                                <Image
-                                    source={itemType === 'sponsor' ? selectedItem.logo : selectedItem.avatar}
-                                    style={itemType === 'sponsor' ? styles.modalSponsorImage : styles.modalAvatarImage}
-                                    resizeMode="contain"
-                                />
+                                <View style={styles.modalHeader}>
+                                    {itemType === 'sponsor' ? (
+                                        <Image
+                                            source={selectedItem.logo}
+                                            style={styles.modalSponsorImage}
+                                            resizeMode="contain"
+                                        />
+                                    ) : (
+                                        <Image
+                                            source={selectedItem.avatar}
+                                            style={styles.modalAvatarImage}
+                                        />
+                                    )}
+                                </View>
                                 <Text style={styles.modalTitle}>{selectedItem.name}</Text>
                                 {itemType === 'sponsor' ? (
                                     <Text style={styles.modalDescription}>{selectedItem.fullDescription}</Text>
@@ -161,144 +276,197 @@ const AboutScreen = () => {
                                     </>
                                 )}
                                 <CustomButton
-                                    title="Ir atras"
+                                    title="Cerrar"
                                     onPress={() => setModalVisible(false)}
-                                    style={{ fontSize: 22 }}
-                                    icon={"arrow-right"}
-                                    iconPosition="right"
-                                    iconSize={24}
+                                    icon="cancel"
+                                    iconSize={20}
                                     neonEffect={true}
-                                    variantColor="red"
+                                    variantColor="gray"
+                                    style={styles.modalButton}
                                 />
                             </>
                         )}
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#1a1a2e',
     },
     scrollView: {
-        flex: 1
+        flex: 1,
     },
     animatedView: {
-        padding: 10
+        padding: 16,
+        paddingBottom: 100,
     },
-    title: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        color: '#1F2937',
+    headerContainer: {
         marginBottom: 24,
-        textAlign: 'center'
+        borderRadius: 15,
+        overflow: 'hidden',
+        elevation: 5,
+        shadowColor: '#0066FF',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+    },
+    headerGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+        borderRadius: 15,
+    },
+    headerIcon: {
+        marginRight: 10,
+    },
+    headerTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: 'white',
     },
     section: {
-        marginBottom: 32
+        marginBottom: 32,
     },
     sectionTitle: {
-        fontSize: 24,
+        fontSize: 18,
         fontWeight: '600',
-        color: '#374151',
+        color: 'white',
         marginBottom: 16,
-        textAlign: 'center'
+        textAlign: 'center',
     },
     cardContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'center'
+        justifyContent: 'center',
     },
-    card: {
-        backgroundColor: 'white',
-        padding: 6,
-        paddingTop: 12,
+    glassCard: {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        padding: 12,
+        paddingTop: 16,
         paddingBottom: 20,
         borderRadius: 20,
-        margin: 6,
-        width: 160,
+        margin: 8,
+        width: width * 0.4,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
+        overflow: 'hidden',
+        // Neon glow effect
+        shadowColor: '#00CCFF',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 8,
+    },
+    shimmerOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: -100,
+        width: 100,
+        height: '200%',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        transform: [{ rotate: '20deg' }],
     },
     sponsorImage: {
-        width: 90,
-        height: 90,
-        marginBottom: 6
+        width: 80,
+        height: 80,
+        marginBottom: 8,
     },
     avatarImage: {
-        width: 90,
-        height: 90,
+        width: 80,
+        height: 80,
         borderRadius: 40,
-        marginBottom: 8
+        marginBottom: 8,
+        borderWidth: 2,
+        borderColor: 'rgba(0, 204, 255, 0.5)',
     },
     cardTitle: {
-        fontWeight: '500',
-        color: '#1F2937'
+        fontSize: 14,
+        fontWeight: '600',
+        color: 'white',
+        textAlign: 'center',
+        marginBottom: 4,
     },
     cardDescription: {
-        fontSize: 14,
-        color: '#4B5563',
-        textAlign: 'center'
+        fontSize: 12,
+        color: 'rgba(255, 255, 255, 0.7)',
+        textAlign: 'center',
     },
     cardRole: {
-        fontSize: 14,
-        color: '#4B5563'
+        fontSize: 12,
+        color: '#00CCFF',
+        textAlign: 'center',
+    },
+    backButtonContainer: {
+        position: 'absolute',
+        bottom: 20,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+    },
+    backButton: {
+        width: '80%',
     },
     modalContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)'
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
     },
-    modalContent: {
+    modalView: {
+        width: '85%',
+        maxWidth: 350,
+        padding: 24,
         backgroundColor: 'white',
-        padding: 20,
         borderRadius: 20,
-        width: '80%',
-        alignItems: 'center'
+        alignItems: 'center',
+    },
+    modalHeader: {
+        marginBottom: 16,
     },
     modalSponsorImage: {
-        width: 120,
-        height: 120,
-        marginBottom: 10
+        width: 100,
+        height: 100,
+        marginBottom: 12,
     },
     modalAvatarImage: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        marginBottom: 10
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginBottom: 12,
+        borderWidth: 3,
+        borderColor: '#0066FF',
     },
     modalTitle: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
         color: '#1F2937',
-        marginBottom: 10,
-        textAlign: 'center'
+        marginBottom: 8,
+        textAlign: 'center',
     },
     modalRole: {
-        fontSize: 18,
-        color: '#4B5563',
-        marginBottom: 10,
-        textAlign: 'center'
+        fontSize: 16,
+        color: '#0066FF',
+        marginBottom: 12,
+        textAlign: 'center',
+        fontWeight: '500',
     },
     modalDescription: {
-        fontSize: 16,
+        fontSize: 14,
         color: '#4B5563',
         textAlign: 'center',
-        marginBottom: 20
+        marginBottom: 20,
+        lineHeight: 20,
     },
     modalButton: {
-        width: '100%'
-    }
+        width: '100%',
+    },
 });
 
 export default AboutScreen;

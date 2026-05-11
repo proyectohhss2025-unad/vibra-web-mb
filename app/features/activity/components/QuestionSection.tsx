@@ -160,37 +160,17 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({ questions, onSubmit, 
             </>)}
             {/* Modal de resultados cuando se completa la actividad */}
             {isCompleted && (
-                <Animated.View
-                    style={[
-                        styles.resultsContainer,
-                        {
-                            opacity: successAnim,
-                            transform: [{ scale: Animated.add(1, Animated.multiply(successAnim, 0.1)) }],
-                        },
-                    ]}
-                >
-                    <View style={styles.resultsContent}>
-                        <MaterialIcons name="check-circle" size={64} color="#10B981" />
-                        <Text style={styles.resultsTitle}>¡Actividad Completada!</Text>
-                        <Text style={styles.resultsScore}>Puntuación: {score}</Text>
-                        <Text style={styles.resultsTime}>
-                            Tiempo: {formatTime(timeSpent)}
-                        </Text>
-                        <Text style={styles.resultsCorrect}>
-                            Respuestas correctas: {responses.filter(r => r.isCorrect).length} de {responses.length}
-                        </Text>
-
-                        {/*<TouchableOpacity
-                            style={styles.resultsButton}
-                            onPress={() => {
-                                setIsCompleted(true);
-                                onSubmit(questions?.type === 'multiple' ? selectedAnswers : { [questions?.id!]: openAnswer });
-                            }}
-                        >
-                            <Text style={styles.resultsButtonText}>Continuar</Text>
-                        </TouchableOpacity>*/}
-                    </View>
-                </Animated.View>
+                <View style={styles.resultsCard}>
+                    <MaterialIcons name="check-circle" size={80} color="#10B981" />
+                    <Text style={styles.resultsTitle}>¡Actividad Completada!</Text>
+                    <Text style={styles.resultsScore}>Puntuación: {score}</Text>
+                    <Text style={styles.resultsTime}>
+                        Tiempo: {formatTime(timeSpent)}
+                    </Text>
+                    <Text style={styles.resultsCorrect}>
+                        Respuestas correctas: {responses.filter(r => r.isCorrect).length} de {responses.length}
+                    </Text>
+                </View>
             )}
         </KeyboardAvoidingView>
     );
@@ -266,57 +246,56 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     // Estilos para el modal de resultados
-    resultsContainer: {
+    resultsOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: 'rgba(16, 185, 129, 0.95)',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 100,
     },
-    resultsContent: {
+    resultsCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 14,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 5,
-        width: '90%',
-        maxWidth: 400,
+        justifyContent: 'center',
+        elevation: 10,
+        width: '95%',
+        maxWidth: 380,
+        minHeight: 400,
     },
     resultsTitle: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#111827',
-        marginTop: 16,
-        marginBottom: 8,
+        marginTop: 20,
+        marginBottom: 16,
+        textAlign: 'center',
     },
     resultsScore: {
-        fontSize: 18,
-        color: '#4B5563',
-        marginBottom: 8,
+        fontSize: 22,
+        fontWeight: '600',
+        color: '#10B981',
+        marginBottom: 12,
     },
     resultsTime: {
         fontSize: 18,
-        color: '#4B5563',
-        marginBottom: 8,
+        color: '#6B7280',
+        marginBottom: 12,
     },
     resultsCorrect: {
         fontSize: 18,
-        color: '#4B5563',
-        marginBottom: 24,
+        color: '#6B7280',
+        marginBottom: 32,
     },
     resultsButton: {
-        backgroundColor: '#3B82F6',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 8,
+        backgroundColor: '#10B981',
+        paddingHorizontal: 40,
+        paddingVertical: 16,
+        borderRadius: 12,
+        marginTop: 8,
     },
     resultsButtonText: {
         color: '#FFFFFF',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
     },
 });

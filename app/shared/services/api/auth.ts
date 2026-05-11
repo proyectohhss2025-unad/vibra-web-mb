@@ -26,24 +26,24 @@ const AuthService = {
     /**
      * Realiza el inicio de sesión del usuario
      * @function
-     * @param {string} email - Correo electrónico del usuario
+     * @param {string} username - Nombre de usuario
      * @param {string} password - Contraseña del usuario
      * @returns {Promise<any>} - Promesa que resuelve con los datos del usuario
      * @throws {Error} - Error si las credenciales son incorrectas o hay un problema de conexión
      */
-    login: async (email: string, password: string): Promise<any> => {
-        if (!email || !password) {
+    login: async (username: string, password: string): Promise<any> => {
+        if (!username || !password) {
             throw new Error('Por favor, completa todos los campos.');
         }
 
         try {
-            const response = await api.post('/api/auth/validate', {
-                email,
+            const response = await api.post('/api/auth/login', {
+                username,
                 password,
             });
 
-            if (response?.data?.user) {
-                return response.data?.user;
+            if (response?.data?.access_token) {
+                return response.data;
             }
 
             throw new Error('Credenciales incorrectas o error en la conexión.');

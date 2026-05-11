@@ -32,13 +32,13 @@ const UserRankingList = () => {
     useEffect(() => {
         const fetchOptions = async () => {
             try {
-                const roleResponse: any = await api.get(`/users/all`, {
+                const roleResponse: any = await api.get(`/api/activities/all`, {
                     /*headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token') ?? 'asdf'}`
                     }*/
                 });
                 console.log('roleResponse?.data:', roleResponse?.data);
-                setItems([...roleResponse.data,
+                /* setItems([...roleResponse.data,
                 {
                     username: 'Juan Perez',
                     documentNumber: '123456789',
@@ -72,7 +72,7 @@ const UserRankingList = () => {
                             name: 'Institucion I'
                         }
                     }
-                }]);
+                }]);*/
             } catch (err: any) {
                 setError(err.message);
             } finally {

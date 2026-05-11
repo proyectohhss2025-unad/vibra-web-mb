@@ -19,12 +19,27 @@ LocaleConfig.locales['es'] = {
 
 LocaleConfig.defaultLocale = 'es';
 
-const CalendarComponent = () => {
+interface CalendarComponentProps {
+    onDateSelect?: (date: string | null) => void;
+    selectedDate?: string | null;
+}
+
+const CalendarComponent: React.FC<CalendarComponentProps> = ({ onDateSelect, selectedDate: externalDate }) => {
     const tailwind = useTailwind();
-    const [selectedDate, setSelectedDate] = useState<string | null>(null);
+    const [internalDate, setInternalDate] = useState<string | null>(externalDate || null);
+    
+    const selectedDate = externalDate !== undefined ? externalDate : internalDate;
 
     const handleDayPress = (day: { dateString: string }) => {
-        setSelectedDate(day.dateString);
+        const newDate = selectedDate === day.dateString ? null : day.dateString;
+        if (externalDate !== undefined) {
+            // Controlled mode - parent provides date
+            onDateSelect?.(newDate);
+        } else {
+            // Uncontrolled mode - internal state
+            setInternalDate(newDate);
+            onDateSelect?.(newDate);
+        }
     };
 
     return (

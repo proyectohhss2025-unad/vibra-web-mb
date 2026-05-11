@@ -5,7 +5,7 @@ import { useSubmitResponse } from '../hooks/activity';
 import useUser from '@/context/UserContext';
 import useActivityStore from '@/shared/store/activity.store';
 import ScoreCounter from './ScoreCounter';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import CustomButton from '@/shared/components/ui/CustomButton';
 
@@ -380,51 +380,56 @@ const MatchingConceptsGame: React.FC<MatchingConceptsGameProps> = ({
 
     return (
         <>
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <View style={styles.timerContainer}>
-                        <MaterialCommunityIcons name="clock-outline" size={24} color="#333" />
-                        <Text style={styles.timerText}>{formatTime(timeLimit - timeSpent)}</Text>
-                    </View>
-
-                    <Animated.View
-                        style={{
-                            transform: [
-                                {
-                                    scale: scoreAnim.interpolate({
-                                        inputRange: [0, 0.5, 1],
-                                        outputRange: [1, 1.2, 1]
-                                    })
-                                }
-                            ]
-                        }}
-                    >
-                        <ScoreCounter currentScore={score} maxScore={conceptPairs.length * 50 + 100} />
-                    </Animated.View>
-                </View>
-
-                <Text style={styles.instructions}>
-                    Empareja cada concepto con su definición correspondiente
-                </Text>
-
-                <ScrollView style={styles.gameArea}>
-                    <View style={styles.itemsContainer}>
-                        {items.map(item => renderItem(item))}
-                    </View>
-                </ScrollView>
-
-            </View>
-
-            {gameComplete &&
-                <View style={[styles.infoContainer, tailwind('min-w-full')]}>
-                    <Animated.View style={{ transform: [{ scale: scoreScale }] }}>
-                        <View style={styles.completionBanner}>
-                            <Text style={styles.completionText}>¡Actividad Completada!</Text>
+            {!gameComplete ? (
+                <View style={styles.container}>
+                    <View style={styles.header}>
+                        <View style={styles.timerContainer}>
+                            <MaterialCommunityIcons name="clock-outline" size={24} color="#333" />
+                            <Text style={styles.timerText}>{formatTime(timeLimit - timeSpent)}</Text>
                         </View>
-                        <Text style={styles.scoreText}>Puntuación: {score}</Text>
+
+                        <Animated.View
+                            style={{
+                                transform: [
+                                    {
+                                        scale: scoreAnim.interpolate({
+                                            inputRange: [0, 0.5, 1],
+                                            outputRange: [1, 1.2, 1]
+                                        })
+                                    }
+                                ]
+                            }}
+                        >
+                            <ScoreCounter currentScore={score} maxScore={conceptPairs.length * 50 + 100} />
+                        </Animated.View>
+                    </View>
+
+                    <Text style={styles.instructions}>
+                        Empareja cada concepto con su definición correspondiente
+                    </Text>
+
+                    <ScrollView style={styles.gameArea}>
+                        <View style={styles.itemsContainer}>
+                            {items.map(item => renderItem(item))}
+                        </View>
+                    </ScrollView>
+                </View>
+            ) : (
+                <View style={styles.resultsOverlay}>
+                    <View style={styles.resultsCard}>
+                        <MaterialIcons name="check-circle" size={80} color="#10B981" />
+                        <Text style={styles.resultsTitle}>¡Actividad Completada!</Text>
+                        <Text style={styles.resultsScore}>Puntuación: {score}</Text>
+                        <Text style={styles.resultsTime}>
+                            Tiempo: {formatTime(timeSpent)}
+                        </Text>
+                        <Text style={styles.resultsCorrect}>
+                            Parejas encontradas: {matchedPairs.length} de {conceptPairs.length}
+                        </Text>
 
                         <CustomButton
                             title='Continuar'
+                            variantColor='green'
                             neonEffect={true}
                             onPress={() => {
                                 actions.nextActivityType();
@@ -432,8 +437,9 @@ const MatchingConceptsGame: React.FC<MatchingConceptsGameProps> = ({
                                 router.push('/features/(tabs)/one');
                             }}
                         />
-                    </Animated.View>
-                </View>}
+                    </View>
+                </View>
+            )}
         </>
     );
 };
@@ -567,6 +573,54 @@ const styles = StyleSheet.create({
         width: '100%',
         top: 10,
         textAlign: 'center',
+    },
+    // Estilos para el modal de resultados
+    resultsOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(16, 185, 129, 0.95)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+        paddingHorizontal: 20,
+    },
+    resultsCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 24,
+        padding: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+        elevation: 10,
+        width: '95%',
+        maxWidth: 380,
+        minHeight: 400,
+    },
+    resultsTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#111827',
+        marginTop: 20,
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    resultsScore: {
+        fontSize: 22,
+        fontWeight: '600',
+        color: '#10B981',
+        marginBottom: 12,
+    },
+    resultsTime: {
+        fontSize: 18,
+        color: '#6B7280',
+        marginBottom: 12,
+    },
+    resultsCorrect: {
+        fontSize: 18,
+        color: '#6B7280',
+        marginBottom: 32,
     },
 });
 

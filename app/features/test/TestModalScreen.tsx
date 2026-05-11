@@ -4,9 +4,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
-import { Dimensions, ImageBackground, ScrollView, StyleSheet, View } from "react-native";
+import { Dimensions, ImageBackground, ScrollView, StyleSheet, View, Platform } from "react-native";
 import { Checkbox, RadioButton, Surface, Text, TextInput } from "react-native-paper";
 import api from '../../shared/services/api/api';
+import { getSafeKeyObjectFromStorage } from "@/shared/utils/safe-token-storage";
 
 const TEST_QUESTIONS: Record<string, any[]> = {
     "1": [
@@ -34,6 +35,14 @@ const TestModalScreen = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<{ [key: string]: any }>({});
 
+    const getUserId = async () => {
+        if (Platform.OS === 'web') {
+            return getSafeKeyObjectFromStorage('userId');
+        } else {
+            return await AsyncStorage.getItem('userId');
+        }
+    };
+
     const handleNext = async () => {
         if (currentIndex < questions.length - 1) {
             const currentQuestion = questions[currentIndex];
@@ -43,14 +52,13 @@ const TestModalScreen = () => {
         } else {
             await AsyncStorage.setItem(`test-${testId}-answers`, JSON.stringify(answers));
 
+            const userId = await getUserId();
+            console.log('UserId for pretest:', userId);
+
             const response = await api.post("/api/pretests/save", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    testId,
-                    userId: user?.id,
-                    responses: Object.entries(answers).map(([questionId, answer]) => ({ questionId, answer })),
-                }),
+                testId,
+                userId: userId,
+                responses: Object.entries(answers).map(([questionId, answer]) => ({ questionId, answer })),
             });
 
             if (response) {

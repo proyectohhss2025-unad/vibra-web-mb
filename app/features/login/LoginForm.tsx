@@ -120,7 +120,7 @@ const LoginForm: React.FC = () => {
                 </Text>
                 <TextInput
                     style={[styles.input, tailwind('w-full p-3 border border-gray-300 rounded-md mb-4 my-2 bg-white')]}
-                    placeholder="Email"
+                    placeholder="Usuario"
                     value={email}
                     onChangeText={setEmail}
                 />

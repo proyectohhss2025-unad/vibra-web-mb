@@ -75,7 +75,19 @@ export const ActivityService = {
         api.get<PaginatedResponse<Activity>>('/api/activities', {
             params: { page, limit: 10, userId, emotion: 'all' }
         }).then(res => res.data),
-    getEmotionsList: () => api.get<string[]>('/api/activities/emotions/list')
+    getEmotionsList: () => api.get<string[]>('/api/activities/emotions/list'),
+    /**
+     * Retrieves challenges (group activities) for a user
+     * @function
+     * @param {string} userId - The user ID
+     * @param {number} page - Page number (default: 1)
+     * @param {number} limit - Items per page (default: 10)
+     * @returns {Promise<any>} - Promise that resolves to paginated challenges
+     */
+    getChallenges: (userId: string, page = 1, limit = 10) =>
+        api.get<any>(`/api/activities/user/${userId}`, {
+            params: { page, limit }
+        }).then(res => res.data)
 };
 
 export default api;

@@ -12,7 +12,7 @@ const mediaItems = [
     {
         id: '12341234',
         title: 'Video 2',
-        source: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        source: './video/suros.mp4',
         type: 'video'
     },
     {
