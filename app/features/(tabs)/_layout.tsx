@@ -4,7 +4,7 @@ import { Tabs, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
-import CustomButton from '../../shared/components/ui/CustomButton';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 const mainLogo = require('../../assets/logo-vibra.png');
 const logoUnad = require('../../assets/sponsors/logo_unad.png');
 
@@ -96,7 +96,7 @@ export default function TabsLayout() {
                     marginTop: Platform.OS == "android" ? -36 : 0,
                 },
                 headerRight: () => (
-                    <CustomButton title="Desconectar" variantColor="red" onPress={logout} />
+                    <TamaguiButton title="Desconectar" variantColor="red" onPress={logout} />
                 ),
             }}>
                 <Tabs.Screen
@@ -113,7 +113,7 @@ export default function TabsLayout() {
                             <MaterialIcons name="calendar-month" size={24} color={color} />
                         ),
                         /*headerLeft: () => (
-                            <CustomButton title="Vibrar" onPress={logout} />
+                            <TamaguiButton title="Vibrar" onPress={logout} />
                         ),*/
                     }}
                 />
@@ -132,11 +132,21 @@ export default function TabsLayout() {
                     options={{
                         title: 'E-Personal',
                         tabBarLabelStyle: getTabTextStyle('/components/three'),
+                        tabBarIcon: ({ color }) => (
+                            <MaterialIcons name="person" size={24} color={color} />
+                        ),
+                    }}
+                />
+                <Tabs.Screen
+                    name="four"
+                    options={{
+                        title: 'Perfil',
+                        tabBarLabelStyle: getTabTextStyle('/components/four'),
                         tabBarItemStyle: {
                             borderTopEndRadius: 10,
                         },
                         tabBarIcon: ({ color }) => (
-                            <MaterialIcons name="person" size={24} color={color} />
+                            <MaterialIcons name="shield" size={24} color={color} />
                         ),
                     }}
                 />

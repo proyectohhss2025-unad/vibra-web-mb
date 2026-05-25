@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTailwind } from 'tailwind-rn';
-import { ActivityService } from '@/shared/services/api/api';
+import api, { ActivityService, RankingApi } from '@/shared/services/api/api';
 import { getSafeKeyObjectFromStorage } from '@/shared/utils/safe-token-storage';
 import CalendarComponent from '@/shared/components/ui/CalendarComponent';
 
@@ -67,9 +67,12 @@ interface EventStats {
 
 interface RankingItem {
     userId: string;
-    username: string;
-    score: number;
+    nickname: string;
+    points: number;
     position: number;
+    level?: string;
+    courseName?: string;
+    institutionName?: string;
 }
 
 const PersonalEventsDashboard = () => {
@@ -105,7 +108,12 @@ const PersonalEventsDashboard = () => {
             setError(null);
             console.log('Loading personal events for user:', userId);
             
-            const response = await ActivityService.getChallenges(userId, 1, 50);
+            // Cargar actividades y datos del participante en paralelo
+            const [response, participantRes] = await Promise.all([
+                ActivityService.getChallenges(userId, 1, 50),
+                api.get(`/api/participants/by-user/${userId}`).then(r => r.data).catch(() => null),
+            ]);
+            
             console.log('Events response:', response);
             
             // API returns { data: [...], total, page, limit } - extract data array
@@ -122,23 +130,49 @@ const PersonalEventsDashboard = () => {
             setAllEvents(personalEvents);
             filterEventsByDate(personalEvents, selectedDate);
             
-            // Calculate stats
-            const completedCount = Math.floor(personalEvents.length * 0.3);
-            const inProgressCount = Math.floor(personalEvents.length * 0.2);
+            // Stats reales
+            const completedCount = participantRes?.totalActivitiesCompleted || 0;
             setStats({
-                disponibles: Math.max(0, personalEvents.length - completedCount - inProgressCount),
-                enProgreso: inProgressCount,
-                completados: completedCount
+                disponibles: personalEvents.length,
+                enProgreso: Math.max(0, personalEvents.length - completedCount),
+                completados: Math.min(completedCount, personalEvents.length),
             });
             
-            // Mock ranking
-            setRanking([
-                { userId: '1', username: 'Ana M.', score: 720, position: 1 },
-                { userId: '2', username: 'Carlos R.', score: 650, position: 2 },
-                { userId: '3', username: 'Sofia P.', score: 580, position: 3 },
-                { userId: '4', username: 'Jorge L.', score: 490, position: 4 },
-                { userId: '5', username: 'Maria G.', score: 420, position: 5 },
-            ]);
+            // Ranking real desde la API
+            const courseId = participantRes?.currentCourse || null;
+            if (courseId) {
+                try {
+                    const rankingData = await RankingApi.getByCourse(courseId, 10);
+                    setRanking((rankingData?.data || []).map((item: any, index: number) => ({
+                        userId: item.userId,
+                        nickname: item.nickname,
+                        points: item.points,
+                        position: item.position || index + 1,
+                        level: item.level,
+                        courseName: item.courseName,
+                        institutionName: item.institutionName,
+                    })));
+                } catch (err) {
+                    console.error('Error loading ranking:', err);
+                    setRanking([]);
+                }
+            } else {
+                try {
+                    const rankingData = await RankingApi.getGeneral(10);
+                    setRanking((rankingData?.data || []).map((item: any, index: number) => ({
+                        userId: item.userId,
+                        nickname: item.nickname,
+                        points: item.points,
+                        position: item.position || index + 1,
+                        level: item.level,
+                        courseName: item.courseName,
+                        institutionName: item.institutionName,
+                    })));
+                } catch (err) {
+                    console.error('Error loading ranking:', err);
+                    setRanking([]);
+                }
+            }
             
         } catch (err: any) {
             console.error('Error loading events:', err);
@@ -313,15 +347,20 @@ const PersonalEventsDashboard = () => {
                         <View key={item.userId} style={tailwind('flex-row items-center py-2 border-b border-gray-100')}>
                             <View style={[
                                 tailwind('w-8 h-8 rounded-full items-center justify-center mr-3'),
-                                index === 0 && tailwind('bg-purple-400'),
+                                index === 0 && tailwind('bg-yellow-400'),
                                 index === 1 && tailwind('bg-gray-300'),
                                 index === 2 && tailwind('bg-amber-600'),
                                 index > 2 && tailwind('bg-gray-200')
                             ]}>
-                                <Text style={tailwind('text-sm font-bold text-white')}>{index + 1}</Text>
+                                <Text style={tailwind('text-sm font-bold text-white')}>{item.position || index + 1}</Text>
                             </View>
-                            <Text style={tailwind('flex-1 text-gray-700')}>{item.username}</Text>
-                            <Text style={tailwind('text-green-600 font-semibold')}>{item.score} pts</Text>
+                            <View style={tailwind('flex-1')}>
+                                <Text style={tailwind('text-gray-700 font-medium')}>{item.nickname}</Text>
+                                {item.level && (
+                                    <Text style={tailwind('text-xs text-gray-400')}>{item.level.charAt(0).toUpperCase() + item.level.slice(1)}</Text>
+                                )}
+                            </View>
+                            <Text style={tailwind('text-green-600 font-semibold')}>{item.points} pts</Text>
                         </View>
                     ))}
                 </View>

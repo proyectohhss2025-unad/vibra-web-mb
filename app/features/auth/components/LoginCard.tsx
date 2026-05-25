@@ -5,13 +5,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, Platform, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Image, Platform, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { getSafeKeyObjectFromStorage } from '@/shared/utils/safe-token-storage';
 import useAuth from '@/shared/hooks/useAuth';
 import useUser from '@/context/UserContext';
-import CustomButton from '@/shared/components/ui/CustomButton';
-import GlassCard from '@/shared/components/ui/GlassCard';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
+import TamaguiGlassCard from '@/shared/components/ui/tamagui/TamaguiGlassCard';
 
 const mainLogo = require('../../../assets/logo-vibra.png');
 
@@ -69,7 +70,7 @@ const LoginCard: React.FC<LoginCardProps> = ({ onForgotPassword }) => {
 
     const handleLogin = async () => {
         if (!username || !password) {
-            Alert.alert('Error', 'Por favor, completa todos los campos.');
+            showTamaguiAlert('Error', 'Por favor, completa todos los campos.');
             return;
         }
 
@@ -81,7 +82,7 @@ const LoginCard: React.FC<LoginCardProps> = ({ onForgotPassword }) => {
             // El redirect ocurre en el useEffect que observa isAuthenticated
         } catch (error: any) {
             console.error('Login error:', error);
-            Alert.alert('Error', error.message || 'Credenciales incorrectas o error en la conexión.');
+            showTamaguiAlert('Error', error.message || 'Credenciales incorrectas o error en la conexión.');
         } finally {
             setLoading(false);
         }
@@ -96,7 +97,7 @@ const LoginCard: React.FC<LoginCardProps> = ({ onForgotPassword }) => {
     };
 
     return (
-        <GlassCard style={styles.card}>
+        <TamaguiGlassCard style={styles.card}>
             {/* Logo */}
             <View style={styles.logoContainer}>
                 <Image source={mainLogo} style={styles.logo} />
@@ -143,7 +144,7 @@ const LoginCard: React.FC<LoginCardProps> = ({ onForgotPassword }) => {
             </View>
 
             {/* Botón Conectarse */}
-            <CustomButton
+            <TamaguiButton
                 neonEffect={true}
                 title={loading ? 'Cargando...' : 'Conectarse'}
                 variantColor="blue"
@@ -157,7 +158,7 @@ const LoginCard: React.FC<LoginCardProps> = ({ onForgotPassword }) => {
             />
 
             {/* Botón Registrarse */}
-            <CustomButton
+            <TamaguiButton
                 neonEffect={true}
                 title={loading ? 'Cargando...' : 'Registrarse'}
                 variantColor="orange"
@@ -171,7 +172,7 @@ const LoginCard: React.FC<LoginCardProps> = ({ onForgotPassword }) => {
             />
 
             {/* Botón Acerca de */}
-            <CustomButton
+            <TamaguiButton
                 neonEffect={true}
                 title="Acerca de"
                 variantColor="purple"
@@ -191,7 +192,7 @@ const LoginCard: React.FC<LoginCardProps> = ({ onForgotPassword }) => {
             >
                 ¿Olvidaste tu contraseña?
             </Text>
-        </GlassCard>
+        </TamaguiGlassCard>
     );
 };
 

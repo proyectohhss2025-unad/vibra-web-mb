@@ -1,10 +1,11 @@
 import { FontAwesome5 } from "@expo/vector-icons";
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import Modal from 'react-native-modal';
+import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import TamaguiSheet from '@/shared/components/ui/tamagui/TamaguiSheet';
 import { useTailwind } from 'tailwind-rn';
 import socket from '../../../socket';
 import api from '../../shared/services/api/api';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
 
 const UserRankingList = () => {
     const tailwind = useTailwind();
@@ -19,7 +20,7 @@ const UserRankingList = () => {
     useEffect(() => {
         socket.on('customEvent', (data) => {
             setMessage(data.message);
-            Alert.alert('Evento Recibido', data.message);
+            showTamaguiAlert('Evento Recibido', data.message);
         });
 
         socket.emit('clientEvent', 'Hola desde el cliente');
@@ -141,90 +142,83 @@ const UserRankingList = () => {
                 />
             </View>*/}
         </View>
-        <Modal isVisible={isModalVisible} onBackdropPress={closeModal}
-            useNativeDriver={true}
-            animationIn="slideInUp"
-            animationOut="slideOutDown">
-            <View style={[{ height: 440 }, tailwind('bg-white p-2 rounded-lg w-full')]}>
-                {(
-                    <>
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 10 }}>
-                            <Text style={tailwind('text-xl font-bold mb-4 text-gray-800 mt-6')}>
-                                Información del Usuario {selectedUser?.username}
-                            </Text>
-                            <Image
-                                source={require('../../assets/avatars/03.jpg')}
-                                style={tailwind('w-10 h-10 rounded-full')}
+        <TamaguiSheet open={isModalVisible} onOpenChange={setIsModalVisible}>
+            <View style={{ flex: 1, padding: 16, alignItems: 'center' }}>
+                <View style={{ alignItems: 'center', marginTop: 10 }}>
+                    <Text style={tailwind('text-xl font-bold mb-4 text-gray-800 mt-6')}>
+                        Información del Usuario {selectedUser?.username}
+                    </Text>
+                    <Image
+                        source={require('../../assets/avatars/03.jpg')}
+                        style={tailwind('w-10 h-10 rounded-full')}
+                    />
+                </View>
+                <View style={{ alignItems: 'center', marginTop: 20 }}>
+                    <Text style={tailwind('text-sm text-gray-800 mt-4')}>
+                        Nombre:
+                    </Text>
+                    <Text style={tailwind('text-sm font-bold text-gray-800')}>
+                        {selectedUser.username}
+                    </Text>
+                </View>
+                <View style={{ alignItems: 'center', marginTop: 10 }}>
+                    <Text >Rank: {rank}</Text>
+                    <View style={{ flexDirection: "row", justifyContent: "center" }}>
+                        {[...Array(5)].map((_, index) => (
+                            <FontAwesome5
+                                key={index + 1}
+                                name="star"
+                                solid
+                                style={{ color: index < 3 ? "#ffd700" : "#929292", marginLeft: 5 }}
                             />
-                        </View>
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 30 }}>
-                            <Text style={tailwind('text-sm text-gray-800 mt-4')}>
-                                Nombre:
-                            </Text>
-                            <Text style={tailwind('text-sm font-bold text-gray-800')}>
-                                {selectedUser.username}
-                            </Text>
-                        </View>
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 10 }}>
-                            <Text >Rank: {rank}</Text>
-                            <View style={{ flexDirection: "row", justifyContent: "center" }}>
-                                {[...Array(5)].map((_, index) => (
-                                    <FontAwesome5
-                                        key={index + 1}
-                                        name="star"
-                                        solid
-                                        style={{ color: index < 3 ? "#ffd700" : "#929292", marginLeft: 5 }}
-                                    />
-                                ))}
-                            </View>
-                        </View>
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={tailwind('text-sm text-gray-600')}>
-                                Documento:
-                            </Text>
-                            <Text style={tailwind('text-sm font-bold text-gray-600')}>
-                                {selectedUser.typeDocument} {selectedUser.documentNumber}
-                            </Text>
-                        </View>
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={tailwind('text-sm text-gray-600')}>
-                                Email:
-                            </Text>
-                            <Text style={tailwind('text-sm font-bold text-gray-600')}>
-                                {selectedUser.email}
-                            </Text>
-                        </View>
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={tailwind('text-sm text-gray-600')}>
-                                Rol:
-                            </Text>
-                            <Text style={tailwind('text-sm font-bold text-gray-600')}>
-                                {selectedUser.role?.name}
-                            </Text>
-                        </View>
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={tailwind('text-sm font-bold text-gray-600')}>
-                                Sesión Activa: {selectedUser.keepSessionActive ? 'Sí' : 'No'}
-                            </Text>
-                        </View>
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={tailwind('text-sm text-gray-600')}>
-                                Curso:
-                            </Text>
-                            <Text style={tailwind('text-sm font-bold text-gray-600')}>
-                                {selectedUser.course?.name} - {selectedUser.course?.hightSchool?.name}
-                            </Text>
-                        </View>
-                        <TouchableOpacity
-                            onPress={closeModal}
-                            style={tailwind('mt-4 bg-blue-500 p-3 rounded-lg items-center')}
-                        >
-                            <Text style={tailwind('text-white font-bold')}>Cerrar</Text>
-                        </TouchableOpacity>
-                    </>
-                )}
+                        ))}
+                    </View>
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                    <Text style={tailwind('text-sm text-gray-600')}>
+                        Documento:
+                    </Text>
+                    <Text style={tailwind('text-sm font-bold text-gray-600')}>
+                        {selectedUser.typeDocument} {selectedUser.documentNumber}
+                    </Text>
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                    <Text style={tailwind('text-sm text-gray-600')}>
+                        Email:
+                    </Text>
+                    <Text style={tailwind('text-sm font-bold text-gray-600')}>
+                        {selectedUser.email}
+                    </Text>
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                    <Text style={tailwind('text-sm text-gray-600')}>
+                        Rol:
+                    </Text>
+                    <Text style={tailwind('text-sm font-bold text-gray-600')}>
+                        {selectedUser.role?.name}
+                    </Text>
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                    <Text style={tailwind('text-sm font-bold text-gray-600')}>
+                        Sesión Activa: {selectedUser.keepSessionActive ? 'Sí' : 'No'}
+                    </Text>
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                    <Text style={tailwind('text-sm text-gray-600')}>
+                        Curso:
+                    </Text>
+                    <Text style={tailwind('text-sm font-bold text-gray-600')}>
+                        {selectedUser.course?.name} - {selectedUser.course?.hightSchool?.name}
+                    </Text>
+                </View>
+                <TouchableOpacity
+                    onPress={closeModal}
+                    style={tailwind('mt-4 bg-blue-500 p-3 rounded-lg items-center')}
+                >
+                    <Text style={tailwind('text-white font-bold')}>Cerrar</Text>
+                </TouchableOpacity>
             </View>
-        </Modal>
+        </TamaguiSheet>
     </>);
 };
 

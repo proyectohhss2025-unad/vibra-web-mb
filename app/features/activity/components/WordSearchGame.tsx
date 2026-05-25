@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Platform } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { useSubmitResponse } from '../hooks/activity';
 import useUser from '@/context/UserContext';
 import useActivityStore from '@/shared/store/activity.store';
 import ScoreCounter from './ScoreCounter';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import CustomButton from '@/shared/components/ui/CustomButton';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
 
 // Component Types
 interface WordSearchGameProps {
@@ -399,16 +400,16 @@ const WordSearchGame: React.FC<WordSearchGameProps> = ({
             // actions.nextActivityType();
         } else {
             // Show completion message and advance to next activity
-            Alert.alert(
+            showTamaguiAlert(
                 '¡Juego terminado!',
                 `Has encontrado ${foundWords.length} de ${words.length} palabras.\nPuntuación: ${finalScore}\nTiempo: ${formatTime(finalTimeSpent)}`,
-                [{
-                    text: 'Continuar',
-                    onPress: () => {
+                {
+                    primaryLabel: 'Continuar',
+                    onPrimary: () => {
                         // Avanzar a la siguiente actividad (MatchingConcepts)
                         actions.nextActivityType();
                     }
-                }]
+                }
             );
         }
     };
@@ -514,7 +515,7 @@ const WordSearchGame: React.FC<WordSearchGameProps> = ({
             </View>
 
             {gameComplete && (
-                <CustomButton
+                <TamaguiButton
                     title='Continuar'
                     neonEffect={true}
                     style={styles.resetButton}

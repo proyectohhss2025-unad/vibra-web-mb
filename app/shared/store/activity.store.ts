@@ -2,20 +2,30 @@ import { create } from 'zustand';
 
 type ActivityType = 'Question' | 'WordSearch' | 'MatchingConcepts' | 'EmotionBox' | 'DiceGame';
 
+interface GameEntry {
+    type: ActivityType;
+    config: Record<string, any>;
+    order: number;
+}
+
 interface ActivityState {
     currentStep: number;
     responses: Record<string, any>[];
     mediaStatus: 'loading' | 'ready' | 'error';
     startTime: number;
     activityType: ActivityType;
+    games: GameEntry[];           // Juegos dinámicos desde la actividad
+    gameIndex: number;            // Índice actual en el array de juegos
     actions: {
         initialize: (steps: number) => void;
+        setGames: (games: GameEntry[]) => void;
         nextStep: () => void;
         prevStep: () => void;
         addResponse: (response: any) => void;
         reset: () => void;
         setActivityType: (type: ActivityType) => void;
         nextActivityType: () => void;
+        isLastGame: () => boolean;
     };
 }
 
@@ -25,58 +35,67 @@ const useActivityStore = create<ActivityState>()((set) => ({
     mediaStatus: 'loading',
     startTime: Date.now(),
     activityType: 'Question',
+    games: [],
+    gameIndex: 0,
     actions: {
         initialize: (steps: number) => set({ currentStep: 0, responses: new Array(steps) }),
+        setGames: (games: GameEntry[]) => set({
+            games,
+            gameIndex: 0,
+            activityType: games.length > 0 ? games[0].type : 'Question',
+        }),
         nextStep: () => set((state) => ({
-            // currentStep: Math.min(state.currentStep + 1, state.responses.length - 1)
             currentStep: state.currentStep + 1
         })),
         prevStep: () => set((state) => ({
             currentStep: Math.max(state.currentStep - 1, 0)
         })),
         addResponse: (response: any) => set((state) => {
-            // Verificamos si la respuesta ya existe para evitar duplicados
             const existingResponseIndex = state.responses.findIndex(r => r.questionId === response.questionId);
-
             if (existingResponseIndex >= 0) {
-                // Si ya existe, actualizamos la respuesta existente
                 const updatedResponses = [...state.responses];
                 updatedResponses[existingResponseIndex] = response;
                 return { responses: updatedResponses };
             } else {
-                // Si no existe, agregamos la nueva respuesta
                 return { responses: [...state.responses, response] };
             }
         }),
-        reset: () => set({
+        reset: () => set((state) => ({
             currentStep: 0,
             responses: [],
             mediaStatus: 'loading',
             startTime: Date.now(),
-            activityType: 'Question'
-        }),
-        setActivityType: (type: ActivityType) => set({
-            activityType: type
-        }),
+            activityType: state.games.length > 0 ? state.games[0]?.type || 'Question' : 'Question',
+            games: state.games,          // Preservar juegos cargados desde BD
+            gameIndex: 0,                // Reiniciar al primer juego
+        })),
+        setActivityType: (type: ActivityType) => set({ activityType: type }),
         nextActivityType: () => set((state) => {
-            const currentType = state.activityType;
-            let nextType: ActivityType = currentType;
-            console.log('currentType:', currentType);
-
-            if (currentType === 'Question') {
-                nextType = 'WordSearch';
-            } else if (currentType === 'WordSearch') {
-                nextType = 'MatchingConcepts';
-            } else if (currentType === 'MatchingConcepts') {
-                nextType = 'EmotionBox';
-            } else if (currentType === 'EmotionBox') {
-                nextType = 'DiceGame';
+            // Secuencia dinámica desde BD (actividades con games configurados)
+            if (state.games.length > 0) {
+                const nextIndex = state.gameIndex + 1;
+                if (nextIndex < state.games.length) {
+                    const nextGame = state.games[nextIndex];
+                    return { activityType: nextGame.type, gameIndex: nextIndex, currentStep: 0 };
+                }
+                // Ya está en el último juego → no avanzar (el botón mostrará "Finalizar")
+                return state;
             }
-
-            console.log('nextType:', nextType);
-
-            return { activityType: nextType };
-        })
+            // Fallback a secuencia fija (actividades sin campo games)
+            const sequence: ActivityType[] = ['Question', 'WordSearch', 'MatchingConcepts', 'EmotionBox', 'DiceGame'];
+            const currentIdx = sequence.indexOf(state.activityType);
+            if (currentIdx >= 0 && currentIdx < sequence.length - 1) {
+                return { activityType: sequence[currentIdx + 1], currentStep: 0 };
+            }
+            return state;
+        }),
+        isLastGame: () => {
+            const state = useActivityStore.getState();
+            if (state.games.length > 0) {
+                return state.gameIndex >= state.games.length - 1;
+            }
+            return state.activityType === 'DiceGame';
+        },
     },
 }));
 

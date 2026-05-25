@@ -5,7 +5,7 @@ import { FlatList, Image, RefreshControl, StyleSheet, TouchableOpacity, View } f
 import { ActivityIndicator, List, Surface } from 'react-native-paper';
 import { useTailwind } from 'tailwind-rn';
 import api from '../../shared/services/api/api';
-import CustomButton from '../../shared/components/ui/CustomButton';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 
 type TestResult = {
     _id: string;
@@ -14,25 +14,36 @@ type TestResult = {
     totalScore?: number;
 };
 
+type TestInfo = {
+    testId: string;
+    title: string;
+};
+
 const TestResultsListScreen = () => {
     const tailwind = useTailwind();
     const { user } = useUser();
     const router = useRouter();
     const [results, setResults] = useState<TestResult[]>([]);
+    const [testMap, setTestMap] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
-    const fetchResults = async () => {
+    const fetchData = async () => {
         setLoading(true);
         try {
+            // 1. Obtener tests disponibles (para mapear testId → title)
+            const testsResponse = await api.get('/api/tests?limit=50');
+            const testsData: TestInfo[] = testsResponse?.data?.data ?? [];
+            const map: Record<string, string> = {};
+            testsData.forEach((t: TestInfo) => { map[t.testId] = t.title; });
+            setTestMap(map);
+
+            // 2. Obtener resultados del usuario
             const response = await api.get('/api/pretests/search/user/' + user?.id, {
-                params: {
-                    userId: user?.id,
-                },
+                params: { userId: user?.id },
             });
-            console.log(response.data);
             if (response) {
-                setResults(response.data);
+                setResults(response.data || []);
             }
         } catch (error) {
             console.error('Error fetching test results:', error);
@@ -43,26 +54,24 @@ const TestResultsListScreen = () => {
     };
 
     useEffect(() => {
-        fetchResults();
+        fetchData();
     }, []);
 
     const onRefresh = () => {
         setRefreshing(true);
-        fetchResults();
+        fetchData();
     };
 
     const renderItem = ({ item }: { item: TestResult }) => (
         <Surface style={styles.card}>
             <List.Item
-                title={`Test: ${item.testId}`}
+                title={testMap[item.testId] ? `Test: ${testMap[item.testId]}` : `Test ID: ${item.testId}`}
                 titleStyle={styles.itemTitle}
                 description={`Puntaje Total: ${item.totalScore ?? 0}`}
                 descriptionStyle={styles.itemDescription}
                 onPress={() => router.push({
                     pathname: '/features/test/TestResultDetailScreen',
-                    params: {
-                        resultId: item._id
-                    }
+                    params: { resultId: item._id }
                 })}
                 right={props => <List.Icon {...props} icon="chevron-right" color="#4a90e2" />}
             />
@@ -108,7 +117,7 @@ const TestResultsListScreen = () => {
                 />
             </View>
             <View style={styles.buttonContainer}>
-                <CustomButton
+                <TamaguiButton
                     neonEffect={true}
                     icon='arrow-left'
                     title='Volver a la lista de tests'

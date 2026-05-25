@@ -77,6 +77,15 @@ export const ActivityService = {
         }).then(res => res.data),
     getEmotionsList: () => api.get<string[]>('/api/activities/emotions/list'),
     /**
+     * Retrieves all emotions from the emotions catalog
+     * @function
+     * @returns {Promise<{data: Array<{_id: string, id: string, name: string, category?: string, icono?: string}>, total: number}>}
+     */
+    getEmotions: (page = 1, limit = 50) =>
+        api.get<{ data: any[]; total: number }>('/api/emotions', {
+            params: { page, limit }
+        }).then(res => res.data),
+    /**
      * Retrieves challenges (group activities) for a user
      * @function
      * @param {string} userId - The user ID
@@ -87,7 +96,72 @@ export const ActivityService = {
     getChallenges: (userId: string, page = 1, limit = 10) =>
         api.get<any>(`/api/activities/user/${userId}`, {
             params: { page, limit }
-        }).then(res => res.data)
+        }).then(res => res.data),
+    /**
+     * Registra el Expo Push Token del dispositivo en el backend
+     * @function
+     * @param {string} token - Expo Push Token
+     * @param {string} platform - Plataforma ('ios' | 'android' | 'web')
+     * @returns {Promise<{success: boolean, message: string}>}
+     */
+    registerPushToken: (token: string, platform: string) =>
+        api.post('/api/push-notifications/register', { token, platform })
+            .then(res => res.data),
+    /**
+     * Registra la completación de una actividad diaria
+     * @function
+     * @param {Object} data - Datos de completación
+     * @param {string} data.participant - ID del participante
+     * @param {string} data.activity - ID de la actividad
+     * @param {number} data.plannedScore - Puntaje máximo posible
+     * @param {number} data.achievedScore - Puntaje alcanzado
+     * @param {number} [data.timeSpent] - Tiempo total en segundos
+     * @param {Array} [data.gamesCompleted] - Detalle por juego
+     * @returns {Promise<any>}
+     */
+    createCompletion: (data: {
+        participant: string;
+        activity: string;
+        plannedScore: number;
+        achievedScore: number;
+        timeSpent?: number;
+        gamesCompleted?: Array<{ type: string; score: number; maxScore: number }>;
+    }) => api.post('/api/activity-completions', data).then(res => res.data),
+};
+
+/**
+ * Service for handling rankings
+ * @namespace RankingApi
+ */
+export const RankingApi = {
+    /**
+     * Obtiene el ranking general de todos los participantes
+     * @param {number} [limit=20] - Máximo de resultados
+     * @param {number} [offset=0] - Paginación
+     */
+    getGeneral: (limit = 20, offset = 0) =>
+        api.get<any>(`/api/rankings/general?limit=${limit}&offset=${offset}`)
+            .then(res => res.data),
+
+    /**
+     * Obtiene el ranking filtrado por curso
+     * @param {string} courseId - ID del curso
+     * @param {number} [limit=20] - Máximo de resultados
+     * @param {number} [offset=0] - Paginación
+     */
+    getByCourse: (courseId: string, limit = 20, offset = 0) =>
+        api.get<any>(`/api/rankings/course/${courseId}?limit=${limit}&offset=${offset}`)
+            .then(res => res.data),
+
+    /**
+     * Obtiene el ranking filtrado por institución
+     * @param {string} institutionId - ID de la institución
+     * @param {number} [limit=20] - Máximo de resultados
+     * @param {number} [offset=0] - Paginación
+     */
+    getByInstitution: (institutionId: string, limit = 20, offset = 0) =>
+        api.get<any>(`/api/rankings/institution/${institutionId}?limit=${limit}&offset=${offset}`)
+            .then(res => res.data),
 };
 
 export default api;

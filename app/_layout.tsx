@@ -6,9 +6,13 @@ import React, { useEffect } from "react";
 import { ImageBackground, Platform, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { TailwindProvider } from "tailwind-rn";
+import { TamaguiProvider } from 'tamagui';
+import { TamaguiAlertProvider } from '@/shared/components/ui/tamagui';
 import '../global.css';
 import utilities from "../tailwind.json";
+import tamaguiConfig from '../config/tamagui.config';
 import { UserProvider } from './context/UserContext';
+import { ParticipantProvider } from './context/ParticipantContext';
 import useAuth from "./shared/hooks/useAuth";
 
 function useNotificationObserver() {
@@ -63,7 +67,9 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <TailwindProvider utilities={utilities}>
+        <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
         <UserProvider>
+          <ParticipantProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <ImageBackground
               source={require("./assets/sponsors/fondo_vibra_new.jpg")}
@@ -71,10 +77,14 @@ export default function RootLayout() {
               resizeMode="cover"
             >
               <StatusBar style="inverted" />
+              <TamaguiAlertProvider>
               <Slot />
+              </TamaguiAlertProvider>
             </ImageBackground>
           </GestureHandlerRootView>
+          </ParticipantProvider>
         </UserProvider>
+        </TamaguiProvider>
       </TailwindProvider>
     </QueryClientProvider>
   );

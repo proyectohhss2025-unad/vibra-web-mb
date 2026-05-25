@@ -1,24 +1,51 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, TextInput, Switch, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, TextInput, Switch, ActivityIndicator } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import EmotionBoxActivity from '../components/EmotionBoxActivity';
 import useUser from '@/context/UserContext';
 import { EmotionConfig, EmotionActivityResult } from '../types/emotion-box';
+import { ActivityService } from '@/shared/services/api/api';
 
 /**
  * Pantalla para la actividad de Caja de Emociones
  * Permite configurar y realizar la actividad de clasificación de emociones
  * @returns {JSX.Element} Componente EmotionBoxScreen
  */
-const EmotionBoxScreen: React.FC = () => {
+const DEFAULT_EMOTIONS: EmotionConfig[] = [
+    { id: '1', name: 'alegría', type: 'sana' },
+    { id: '2', name: 'gratitud', type: 'sana' },
+    { id: '3', name: 'tranquilidad', type: 'sana' },
+    { id: '4', name: 'amor', type: 'sana' },
+    { id: '5', name: 'tristeza', type: 'gestionar' },
+    { id: '6', name: 'enojo', type: 'gestionar' },
+    { id: '7', name: 'ansiedad', type: 'gestionar' },
+    { id: '8', name: 'miedo', type: 'gestionar' },
+];
+
+// Mapea la categoría del backend al tipo de la app móvil
+const mapCategoryToType = (category?: string): 'sana' | 'gestionar' => {
+    switch (category) {
+        case 'Positiva': return 'sana';
+        case 'Negativa': return 'gestionar';
+        default: return 'sana';
+    }
+};
+
+interface EmotionBoxScreenProps {
+    emotions?: Array<{ id: string; name: string; type: 'sana' | 'gestionar'; imageUrl?: string }>;
+    timeLimit?: number;
+}
+
+const EmotionBoxScreen: React.FC<EmotionBoxScreenProps> = ({ emotions: propEmotions, timeLimit: propTimeLimit }) => {
     const tailwind = useTailwind();
     const router = useRouter();
     const { user } = useUser();
 
     // Estado para controlar si estamos en modo configuración o actividad
     const [isConfigMode, setIsConfigMode] = useState<boolean>(true);
+    const [isLoadingEmotions, setIsLoadingEmotions] = useState(true);
 
     // Estado para la configuración de la actividad
     const [activityConfig, setActivityConfig] = useState({
@@ -27,16 +54,30 @@ const EmotionBoxScreen: React.FC = () => {
     });
 
     // Estado para las emociones configuradas
-    const [configuredEmotions, setConfiguredEmotions] = useState<EmotionConfig[]>([
-        { id: '1', name: 'alegría', type: 'sana' },
-        { id: '2', name: 'gratitud', type: 'sana' },
-        { id: '3', name: 'tranquilidad', type: 'sana' },
-        { id: '4', name: 'amor', type: 'sana' },
-        { id: '5', name: 'tristeza', type: 'gestionar' },
-        { id: '6', name: 'enojo', type: 'gestionar' },
-        { id: '7', name: 'ansiedad', type: 'gestionar' },
-        { id: '8', name: 'miedo', type: 'gestionar' },
-    ]);
+    const [configuredEmotions, setConfiguredEmotions] = useState<EmotionConfig[]>(DEFAULT_EMOTIONS);
+
+    // Cargar emociones desde el API al montar
+    useEffect(() => {
+        const fetchEmotions = async () => {
+            try {
+                const response = await ActivityService.getEmotions(1, 50);
+                if (response?.data && response.data.length > 0) {
+                    const mapped: EmotionConfig[] = response.data.map((e: any) => ({
+                        id: e._id ?? e.id ?? String(Math.random()),
+                        name: (e.name ?? '').toLowerCase(),
+                        type: mapCategoryToType(e.category),
+                    }));
+                    setConfiguredEmotions(mapped);
+                }
+            } catch (err) {
+                console.log('Error cargando emociones del API, usando defaults:', err);
+                // Mantiene DEFAULT_EMOTIONS
+            } finally {
+                setIsLoadingEmotions(false);
+            }
+        };
+        fetchEmotions();
+    }, []);
 
     // Estado para la nueva emoción que se está añadiendo
     const [newEmotion, setNewEmotion] = useState<Partial<EmotionConfig>>({
@@ -105,7 +146,12 @@ const EmotionBoxScreen: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            {isConfigMode ? (
+            {isLoadingEmotions ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#3B82F6" />
+                    <Text style={styles.loadingText}>Cargando emociones...</Text>
+                </View>
+            ) : isConfigMode ? (
                 // Modo de configuración
                 <ScrollView style={styles.configContainer}>
                     <View style={styles.configSection}>
@@ -229,6 +275,16 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F9FAFB',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 12,
+        fontSize: 14,
+        color: '#6B7280',
     },
     header: {
         flexDirection: 'row',

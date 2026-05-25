@@ -8,6 +8,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import LoginScreen from './features/auth/LoginScreen';
 // Import the global.css file in the index.js file:
 import '../global.css';
+import { ActivityService } from './shared/services/api/api';
 //import messaging from '@react-native-firebase/messaging';
 
 // Solicitar permisos para notificaciones (iOS)
@@ -137,6 +138,14 @@ const Index: React.FC = () => {
           })
         ).data;
         console.log(token);
+
+        // Enviar token al backend
+        try {
+          await ActivityService.registerPushToken(token, Platform.OS);
+          console.log('Push token registered on backend');
+        } catch (err) {
+          console.error('Error registering push token on backend:', err);
+        }
       } catch (e) {
         token = `${e}`;
       }

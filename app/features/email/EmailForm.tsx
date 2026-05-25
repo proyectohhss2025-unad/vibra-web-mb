@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Alert } from 'react-native';
+import { View, TextInput, Button } from 'react-native';
 import api from '../../shared/services/api/api';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
 
 interface EmailFormData {
     to: string;
@@ -28,10 +29,10 @@ const EmailForm = () => {
             });
 
             if (response) {
-                Alert.alert(response.message || response.error);
+                showTamaguiAlert(response.message || response.error);
             }
         } catch (error) {
-            Alert.alert('Error de conexión');
+            showTamaguiAlert('Error de conexión');
         }
     };
 

@@ -15,11 +15,11 @@ export interface UserRank extends RankingEntry {
 
 interface RankingEntry {
     userId: string;
-    score: number;
-    username?: string;
+    nickname: string;
+    level: string;
+    points: number;
     avatar?: string;
-    position?: number;
-    lastActivity?: Date;
+    rank?: number;
 }
 
 export default RankingEntry;

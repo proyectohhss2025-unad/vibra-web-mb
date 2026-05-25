@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Alert, Button, StyleSheet, Text, View } from 'react-native';
+import { Button, StyleSheet, Text, View } from 'react-native';
 //import DocumentPicker from 'react-native-document-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import Video from 'react-native-video';
 import api from '../../services/api/api';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
 
 const UploadFile = () => {
     const [file, setFile] = useState<any | null>(null);
@@ -42,7 +43,7 @@ const UploadFile = () => {
 
     const uploadFile = async () => {
         if (!file) {
-            Alert.alert('Error', 'No se ha seleccionado ningún archivo.');
+            showTamaguiAlert('Error', 'No se ha seleccionado ningún archivo.');
             return;
         }
 
@@ -63,9 +64,9 @@ const UploadFile = () => {
             });
             console.log('response.data?.fileId:', response.data?.fileId);
             setFileId(response.data?.fileId);
-            Alert.alert('Éxito', 'El archivo se ha subido correctamente.');
+            showTamaguiAlert('Éxito', 'El archivo se ha subido correctamente.');
         } catch (error) {
-            Alert.alert('Error', 'No se pudo subir el archivo.');
+            showTamaguiAlert('Error', 'No se pudo subir el archivo.');
         }
     };
 

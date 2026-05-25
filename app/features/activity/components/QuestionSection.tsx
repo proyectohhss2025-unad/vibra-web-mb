@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, KeyboardAvoidingView, Platform, Animated } from 'react-native';
 import Question from '../../../shared/types/activity';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import CustomButton from '@/shared/components/ui/CustomButton';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 import useActivityStore from '@/shared/store/activity.store';
 
 interface QuestionSectionProps {
@@ -148,7 +148,7 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({ questions, onSubmit, 
 
                 {error ? <Text style={styles.errorText}><Ionicons style={{ top: 6 }} name="information-circle" size={22} color="red" /> {error}</Text> : null}
 
-                <CustomButton
+                <TamaguiButton
                     title="Continuar"
                     variantColor='blue'
                     neonEffect={true}

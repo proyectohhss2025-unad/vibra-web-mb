@@ -3,7 +3,7 @@ import { SafeAreaView, StatusBar, StyleSheet, View, Text, ScrollView } from 'rea
 import { DiceQuestion } from '../components/DiceGameConfig';
 import DiceGameActivity from '../components/DiceGameActivity';
 import DiceGameConfig from '../components/DiceGameConfig';
-import CustomButton from '@/shared/components/ui/CustomButton';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 import { Ionicons } from '@expo/vector-icons';
 
 /**
@@ -21,13 +21,17 @@ interface GameResult {
     timestamp: number;
 }
 
+interface DiceGameScreenProps {
+    questions?: DiceQuestion[];
+}
+
 /**
  * Componente principal para la pantalla del juego de dados
  * @returns {JSX.Element} Componente renderizado
  */
-const DiceGameScreen: React.FC = () => {
+const DiceGameScreen: React.FC<DiceGameScreenProps> = ({ questions: propQuestions }) => {
     // Estados del componente
-    const [questions, setQuestions] = useState<DiceQuestion[]>([]);
+    const [questions, setQuestions] = useState<DiceQuestion[]>(propQuestions ?? []);
     const [showConfig, setShowConfig] = useState(false);
     const [gameResults, setGameResults] = useState<GameResult[]>([]);
     const [studentInfo, setStudentInfo] = useState({
@@ -149,7 +153,7 @@ const DiceGameScreen: React.FC = () => {
             {/*
             <View style={styles.header}>
                 <Text style={styles.title}>Juego de Dados Educativo</Text>
-                <CustomButton
+                <TamaguiButton
                     title={showConfig ? "Ver Juego" : "Configurar"}
                     variantColor="purple"
                     onPress={toggleConfigView}
@@ -181,7 +185,7 @@ const DiceGameScreen: React.FC = () => {
                                 <Text style={styles.emptyStateText}>
                                     No hay preguntas configuradas. Por favor, configura al menos una pregunta para cada valor del dado.
                                 </Text>
-                                <CustomButton
+                                <TamaguiButton
                                     title="Configurar preguntas"
                                     variantColor="purple"
                                     neonEffect={true}
@@ -221,7 +225,7 @@ const DiceGameScreen: React.FC = () => {
                             </Text>
                         </View>
                     </View>
-                    <CustomButton
+                    <TamaguiButton
                         title="Enviar resultados"
                         variantColor="green"
                         neonEffect={true}

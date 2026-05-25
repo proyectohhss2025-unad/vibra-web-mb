@@ -1,11 +1,10 @@
-import { useNavigation } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ActivityIndicator, Card, Text } from 'react-native-paper';
 import { useTailwind } from 'tailwind-rn';
 import api from '../../shared/services/api/api';
-import CustomButton from '../../shared/components/ui/CustomButton';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 
 type TestResult = {
     _id: string;
@@ -15,20 +14,39 @@ type TestResult = {
     responses: { questionId: string; answer: any; points: number }[];
 };
 
+type TestName = {
+    testId: string;
+    title: string;
+};
+
 const TestResultDetailScreen = () => {
     const tailwind = useTailwind();
     const router = useRouter();
-    const navigation = useNavigation();
     const { resultId } = useLocalSearchParams<{ resultId: string }>();
     const [result, setResult] = useState<TestResult | null>(null);
+    const [testTitles, setTestTitles] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
 
     const fetchResult = async () => {
         setLoading(true);
         try {
-            const response = await api.get(`/pretest/result/${resultId}`);
+            // Obtener detalle del resultado
+            const response = await api.get(`/api/pretests/result/${resultId}`);
             if (response) {
-                setResult(response.data);
+                const data = response.data;
+                setResult(data);
+
+                // Obtener nombre del test asociado
+                if (data?.testId) {
+                    try {
+                        const testResponse = await api.get(`/api/tests/by-testid/${data.testId}`);
+                        if (testResponse?.data) {
+                            setTestTitles({ [data.testId]: testResponse.data.title });
+                        }
+                    } catch {
+                        // Si falla, mostramos el testId nomás
+                    }
+                }
             }
         } catch (error) {
             console.error('Error fetching result detail:', error);
@@ -45,6 +63,9 @@ const TestResultDetailScreen = () => {
         return <ActivityIndicator animating={true} style={{ marginTop: 20 }} />;
     }
 
+    const testTitle = testTitles[result.testId] || result.testId;
+    const userName = typeof result.userId === 'object' ? result.userId?.username : result.userId;
+
     return (
         <View style={styles.container}>
             <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -58,20 +79,27 @@ const TestResultDetailScreen = () => {
 
                 <View style={styles.header}></View>
                 <View style={styles.headerContainer}>
-                    <Text style={{ textAlign: 'center', marginTop: 30 }} variant="titleLarge">{result.testId}-{result.userId?.username}</Text>
-                    <Text style={{ textAlign: 'center' }} variant="titleSmall">Puntaje Total: {result.totalScore ?? 0}</Text>
+                    <Text style={{ textAlign: 'center', marginTop: 30 }} variant="titleLarge">
+                        {testTitle}
+                    </Text>
+                    <Text style={{ textAlign: 'center' }} variant="titleSmall">
+                        Usuario: {userName}
+                    </Text>
+                    <Text style={{ textAlign: 'center', marginTop: 8 }} variant="titleSmall">
+                        Puntaje Total: {result.totalScore ?? 0}
+                    </Text>
                 </View>
                 {result.responses?.map((response, index) => (
                     <Card key={index + 1} style={{ marginBottom: 12 }}>
                         <Card.Title title={`Pregunta: ${response.questionId}`} subtitle={`Puntos: ${response.points}`} />
                         <Card.Content>
-                            <Text>Respuesta: {JSON.stringify(response.answer)}</Text>
+                            <Text>Respuesta: {Array.isArray(response.answer) ? response.answer.join(', ') : String(response.answer)}</Text>
                         </Card.Content>
                     </Card>
                 ))}
             </ScrollView>
             <View style={styles.buttonContainer}>
-                <CustomButton
+                <TamaguiButton
                     icon="arrow-left"
                     style={{ marginRight: 16 }}
                     neonEffect={true}
@@ -106,7 +134,6 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         padding: 16,
-        //backgroundColor: 'white',
         elevation: 8,
     },
 });

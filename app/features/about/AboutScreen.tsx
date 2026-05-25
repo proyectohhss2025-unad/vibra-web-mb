@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import CustomButton from '../../shared/components/ui/CustomButton';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 import { useTailwind } from 'tailwind-rn';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -229,7 +229,7 @@ const AboutScreen = () => {
 
             {/* Back button */}
             <View style={styles.backButtonContainer}>
-                <CustomButton
+                <TamaguiButton
                     title="Ir atrás"
                     onPress={() => router.back()}
                     icon="arrow-right"
@@ -275,7 +275,7 @@ const AboutScreen = () => {
                                         <Text style={styles.modalDescription}>{selectedItem.bio}</Text>
                                     </>
                                 )}
-                                <CustomButton
+                                <TamaguiButton
                                     title="Cerrar"
                                     onPress={() => setModalVisible(false)}
                                     icon="cancel"

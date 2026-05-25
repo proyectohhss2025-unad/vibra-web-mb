@@ -3,12 +3,13 @@
  * @module features/auth/ForgotPasswordScreen
  */
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTailwind } from 'tailwind-rn';
 import GradientBackground from './components/GradientBackground';
-import GlassCard from '@/shared/components/ui/GlassCard';
-import CustomButton from '@/shared/components/ui/CustomButton';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
+import TamaguiGlassCard from '@/shared/components/ui/tamagui/TamaguiGlassCard';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 import AuthService, { EmailFormData } from '@/shared/services/api/auth';
 
 type Step = 'request' | 'success';
@@ -53,7 +54,7 @@ const ForgotPasswordScreen: React.FC = () => {
             if (err.message?.includes('404') || err.message?.includes('not found')) {
                 setError('No encontramos esa dirección de email. Verifica o regístrate.');
             } else {
-                Alert.alert('Error', 'No pudimos enviar el email. Intenta de nuevo.');
+                showTamaguiAlert('Error', 'No pudimos enviar el email. Intenta de nuevo.');
             }
         } finally {
             setLoading(false);
@@ -78,7 +79,7 @@ const ForgotPasswordScreen: React.FC = () => {
                 >
                     <View style={styles.content}>
                         {/* Back button */}
-                        <CustomButton
+                        <TamaguiButton
                             title="Volver"
                             variantColor="gray"
                             onPress={handleBack}
@@ -89,7 +90,7 @@ const ForgotPasswordScreen: React.FC = () => {
                         />
 
                         {/* Card */}
-                        <GlassCard style={styles.card}>
+                        <TamaguiGlassCard style={styles.card}>
                             {/* Lock icon */}
                             <View style={styles.iconContainer}>
                                 <Text style={styles.icon}>🔒</Text>
@@ -131,7 +132,7 @@ const ForgotPasswordScreen: React.FC = () => {
                             ) : null}
 
                             {/* Send button */}
-                            <CustomButton
+                            <TamaguiButton
                                 title={loading ? 'Enviando...' : 'Enviar enlace'}
                                 variantColor="blue"
                                 onPress={handleSendEmail}
@@ -142,7 +143,7 @@ const ForgotPasswordScreen: React.FC = () => {
                                 fullWidth={true}
                                 style={styles.button}
                             />
-                        </GlassCard>
+                        </TamaguiGlassCard>
                     </View>
                 </KeyboardAvoidingView>
             </GradientBackground>
@@ -158,7 +159,7 @@ const ForgotPasswordScreen: React.FC = () => {
             >
                 <View style={styles.content}>
                     {/* Back button */}
-                    <CustomButton
+                    <TamaguiButton
                         title="Volver"
                         variantColor="gray"
                         onPress={handleBack}
@@ -169,7 +170,7 @@ const ForgotPasswordScreen: React.FC = () => {
                     />
 
                     {/* Card */}
-                    <GlassCard style={styles.card}>
+                    <TamaguiGlassCard style={styles.card}>
                         {/* Check icon */}
                         <View style={styles.iconContainer}>
                             <Text style={styles.iconSuccess}>✓</Text>
@@ -195,7 +196,7 @@ const ForgotPasswordScreen: React.FC = () => {
                         </Text>
 
                         {/* Go to login button */}
-                        <CustomButton
+                        <TamaguiButton
                             title="Volver al login"
                             variantColor="gray"
                             onPress={handleGoToLogin}
@@ -203,7 +204,7 @@ const ForgotPasswordScreen: React.FC = () => {
                             fullWidth={true}
                             style={styles.buttonOutline}
                         />
-                    </GlassCard>
+                    </TamaguiGlassCard>
                 </View>
             </KeyboardAvoidingView>
         </GradientBackground>

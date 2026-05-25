@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Text, Platform } from 'react-native';
 import { Video, Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
@@ -7,16 +7,22 @@ import Slider from '@react-native-community/slider';
 import { useKeepAwake } from 'expo-keep-awake';
 import { Resource } from '@/shared/types/activity';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
 
 interface MediaPlayerProps {
     resource: Resource;
     onComplete: () => void;
 }
 
+const KeepAwakeActivator: React.FC = () => {
+    if (Platform.OS === 'web') return null;
+    useKeepAwake();
+    return null;
+};
+
 const MediaPlayer: React.FC<MediaPlayerProps> = ({ resource, onComplete }) => {
     const [selectedMedia, setSelectedMedia] = useState<any>(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    useKeepAwake();
     const videoRef = useRef<Video>(null);
     const [status, setStatus] = useState<{
         isPlaying: boolean;
@@ -60,7 +66,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ resource, onComplete }) => {
                     return () => sound.unloadAsync();
                 }
             } catch (error) {
-                Alert.alert('Error', 'No se pudo cargar el recurso multimedia');
+                showTamaguiAlert('Error', 'No se pudo cargar el recurso multimedia');
             } finally {
                 setIsLoading(false);
             }
@@ -136,6 +142,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ resource, onComplete }) => {
 
     return (
         <View style={styles.container}>
+            <KeepAwakeActivator />
             {resource?.type === 'video' ? (<>
                 {/*<Video
                     ref={videoRef}

@@ -13,6 +13,18 @@ type Question = {
     points: number;
 }
 
+interface Tip {
+    emoji: string;
+    message: string;
+    category?: string;
+}
+
+interface GameEntry {
+    type: 'WordSearch' | 'MatchingConcepts' | 'DiceGame' | 'EmotionBox';
+    config: Record<string, any>;
+    order: number;
+}
+
 interface Activity {
     _id: any;
     emotion: any;
@@ -24,6 +36,8 @@ interface Activity {
     estimatedDuration: number;
     version: string;
     createdAt: Date;
+    tips?: Tip[];
+    games?: GameEntry[];
 }
 
 // Modelo de Planificación Semanal

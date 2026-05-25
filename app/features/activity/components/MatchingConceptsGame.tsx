@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Alert, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, ScrollView, Platform } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { useSubmitResponse } from '../hooks/activity';
 import useUser from '@/context/UserContext';
 import useActivityStore from '@/shared/store/activity.store';
 import ScoreCounter from './ScoreCounter';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import CustomButton from '@/shared/components/ui/CustomButton';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
 
 // Component types
 interface MatchingConceptsGameProps {
@@ -298,17 +298,16 @@ const MatchingConceptsGame: React.FC<MatchingConceptsGameProps> = ({
             actions.reset();
             router.push('/features/(tabs)/one');
         } else {*/
-        Alert.alert(
+        showTamaguiAlert(
             '¡Actividad completada!',
             `Has emparejado ${matchedPairs.length} de ${conceptPairs.length} conceptos.\nPuntuación: ${finalScore}\nTiempo: ${formatTime(finalTimeSpent)}`,
-            [{
-                text: 'Finalizar',
-                onPress: () => {
-                    // Reiniciar el estado de la actividad y redirigir al usuario
-                    actions.reset();
-                    router.push('/features/(tabs)/one');
+            {
+                primaryLabel: 'Continuar',
+                onPrimary: () => {
+                    // Ir a la siguiente actividad del día
+                    actions.nextActivityType();
                 }
-            }]
+            }
         );
         //}
     };
@@ -427,14 +426,13 @@ const MatchingConceptsGame: React.FC<MatchingConceptsGameProps> = ({
                             Parejas encontradas: {matchedPairs.length} de {conceptPairs.length}
                         </Text>
 
-                        <CustomButton
+                        <TamaguiButton
                             title='Continuar'
                             variantColor='green'
                             neonEffect={true}
                             onPress={() => {
+                                // Ir a la siguiente actividad del día
                                 actions.nextActivityType();
-                                actions.reset();
-                                router.push('/features/(tabs)/one');
                             }}
                         />
                     </View>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Image, Dimensions, TextInput } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import CustomButton from '@/shared/components/ui/CustomButton';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 import useActivityStore from '@/shared/store/activity.store';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -270,7 +270,7 @@ const DiceGameActivity: React.FC<DiceGameActivityProps> = ({
                     <Ionicons name="person-circle" size={24} color="#4F46E5" />
                     <Text style={styles.studentName}>{studentName}</Text>
                 </View>
-                {diceValue && (
+                {!!diceValue && (
                     <View style={styles.scoreContainer}>
                         <Text style={styles.scoreLabel}>Puntos posibles:</Text>
                         <Text style={styles.scoreValue}>{diceValue}</Text>
@@ -286,7 +286,7 @@ const DiceGameActivity: React.FC<DiceGameActivityProps> = ({
                         <TouchableOpacity onPress={handleRollDice} style={styles.diceButton}>
                             <MaterialCommunityIcons name="dice-multiple" size={80} color="#4F46E5" />
                         </TouchableOpacity>
-                        <CustomButton
+                        <TamaguiButton
                             title="Lanzar dado"
                             variantColor="blue"
                             neonEffect={true}
@@ -376,7 +376,7 @@ const DiceGameActivity: React.FC<DiceGameActivityProps> = ({
                             </Text>
                         ) : null}
 
-                        <CustomButton
+                        <TamaguiButton
                             title="Enviar respuesta"
                             variantColor="blue"
                             neonEffect={true}
@@ -417,7 +417,7 @@ const DiceGameActivity: React.FC<DiceGameActivityProps> = ({
                                 </View>
                             </View>
 
-                            <CustomButton
+                            <TamaguiButton
                                 title="Jugar de nuevo"
                                 variantColor={result.isCorrect ? "green" : "blue"}
                                 neonEffect={true}
@@ -431,9 +431,9 @@ const DiceGameActivity: React.FC<DiceGameActivityProps> = ({
             </View>
 
             {/* Mensaje de error general */}
-            {error && gamePhase === 'ready' && (
-                <Text style={styles.generalErrorText}>{error}</Text>
-            )}
+{!!error && gamePhase === 'ready' && (
+    <Text style={styles.generalErrorText}>{error}</Text>
+)}
         </View>
     );
 };

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { Ionicons } from '@expo/vector-icons';
-import CustomButton from '../../components/ui/CustomButton';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 
 interface ErrorScreenProps {
     message?: string;
@@ -31,7 +31,7 @@ const ErrorScreen: React.FC<ErrorScreenProps> = ({
                 </Text>
 
                 {onRetry && (
-                    <CustomButton
+                    <TamaguiButton
                         icon={"home"}
                         iconPosition="left"
                         iconSize={24}

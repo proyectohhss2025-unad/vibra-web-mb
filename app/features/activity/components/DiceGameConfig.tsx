@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import CustomButton from '@/shared/components/ui/CustomButton';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
 
 /**
  * Interfaz para las preguntas configurables del juego de dados
@@ -85,7 +86,7 @@ const DiceGameConfig: React.FC<DiceGameConfigProps> = ({ onSaveQuestions, initia
      */
     const validateForm = (): boolean => {
         if (!questionText.trim()) {
-            Alert.alert('Error', 'El texto de la pregunta es obligatorio');
+            showTamaguiAlert('Error', 'El texto de la pregunta es obligatorio');
             return false;
         }
 
@@ -94,16 +95,16 @@ const DiceGameConfig: React.FC<DiceGameConfigProps> = ({ onSaveQuestions, initia
             const validOptions = options.filter(opt => opt.trim() !== '');
 
             if (validOptions.length < 2) {
-                Alert.alert('Error', 'Debes proporcionar al menos 2 opciones válidas');
+                showTamaguiAlert('Error', 'Debes proporcionar al menos 2 opciones válidas');
                 return false;
             }
 
             if (!validOptions.includes(correctAnswer)) {
-                Alert.alert('Error', 'La respuesta correcta debe ser una de las opciones');
+                showTamaguiAlert('Error', 'La respuesta correcta debe ser una de las opciones');
                 return false;
             }
         } else if (!correctAnswer.trim()) {
-            Alert.alert('Error', 'La respuesta correcta es obligatoria');
+            showTamaguiAlert('Error', 'La respuesta correcta es obligatoria');
             return false;
         }
 
@@ -113,7 +114,7 @@ const DiceGameConfig: React.FC<DiceGameConfigProps> = ({ onSaveQuestions, initia
         );
 
         if (existingQuestion) {
-            Alert.alert('Error', `Ya existe una pregunta para el valor ${diceValue} del dado`);
+            showTamaguiAlert('Error', `Ya existe una pregunta para el valor ${diceValue} del dado`);
             return false;
         }
 
@@ -174,21 +175,19 @@ const DiceGameConfig: React.FC<DiceGameConfigProps> = ({ onSaveQuestions, initia
      * @param {string} id - ID de la pregunta a eliminar
      */
     const handleDeleteQuestion = (id: string) => {
-        Alert.alert(
+        showTamaguiAlert(
             'Confirmar eliminación',
             '¿Estás seguro de que deseas eliminar esta pregunta?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                {
-                    text: 'Eliminar',
-                    style: 'destructive',
-                    onPress: () => {
-                        const updatedQuestions = questions.filter(q => q.id !== id);
-                        setQuestions(updatedQuestions);
-                        onSaveQuestions(updatedQuestions);
-                    }
+            {
+                secondaryLabel: 'Cancelar',
+                primaryLabel: 'Eliminar',
+                destructive: true,
+                onPrimary: () => {
+                    const updatedQuestions = questions.filter(q => q.id !== id);
+                    setQuestions(updatedQuestions);
+                    onSaveQuestions(updatedQuestions);
                 }
-            ]
+            }
         );
     };
 
@@ -348,7 +347,7 @@ const DiceGameConfig: React.FC<DiceGameConfigProps> = ({ onSaveQuestions, initia
                 )}
 
                 <View style={styles.buttonContainer}>
-                    <CustomButton
+                    <TamaguiButton
                         title={isEditing ? 'Actualizar' : 'Guardar'}
                         variantColor="blue"
                         neonEffect={true}
@@ -358,7 +357,7 @@ const DiceGameConfig: React.FC<DiceGameConfigProps> = ({ onSaveQuestions, initia
                     />
 
                     {isEditing && (
-                        <CustomButton
+                        <TamaguiButton
                             title="Cancelar"
                             variantColor="gray"
                             onPress={resetForm}

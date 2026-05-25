@@ -1,11 +1,12 @@
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useTailwind } from 'tailwind-rn';
 import api from '../../shared/services/api/api';
-import CustomButton from '@/shared/components/ui/CustomButton';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import UserIllustration from '@/shared/components/illustrations/UserIllustration';
@@ -132,7 +133,7 @@ const RegisterForm = () => {
             setPreviewModalVisible(true);
         } else {
             const firstError = Object.values(errors)[0];
-            Alert.alert('Validación', firstError);
+            showTamaguiAlert('Validación', firstError);
         }
     };
 
@@ -422,7 +423,7 @@ const RegisterForm = () => {
 
                         {/* Buttons */}
                         <View style={styles.buttonContainer}>
-                            <CustomButton
+                            <TamaguiButton
                                 neonEffect={true}
                                 icon="cancel"
                                 variantColor="gray"
@@ -432,7 +433,7 @@ const RegisterForm = () => {
                                 style={styles.button}
                                 onPress={handleCancel}
                             />
-                            <CustomButton
+                            <TamaguiButton
                                 neonEffect={true}
                                 icon="person-add"
                                 variantColor="blue"
@@ -500,7 +501,7 @@ const RegisterForm = () => {
                             </View>
 
                             <View style={styles.modalButtons}>
-                                <CustomButton
+                                <TamaguiButton
                                     neonEffect={true}
                                     icon="cancel"
                                     variantColor="gray"
@@ -508,7 +509,7 @@ const RegisterForm = () => {
                                     style={styles.modalButton}
                                     onPress={() => setPreviewModalVisible(false)}
                                 />
-                                <CustomButton
+                                <TamaguiButton
                                     neonEffect={true}
                                     icon="check"
                                     variantColor="green"
@@ -541,7 +542,7 @@ const RegisterForm = () => {
                                 {resultType === 'success' ? '¡Éxito!' : 'Error'}
                             </Text>
                             <Text style={styles.resultMessage}>{resultMessage}</Text>
-                            <CustomButton
+                            <TamaguiButton
                                 neonEffect={true}
                                 icon="check"
                                 variantColor={resultType === 'success' ? 'blue' : 'red'}

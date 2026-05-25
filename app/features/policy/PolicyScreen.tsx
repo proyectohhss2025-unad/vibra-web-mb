@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Platform, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, Modal } from 'react-native';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
 import { useTailwind } from 'tailwind-rn';
 import { useRouter } from 'expo-router';
 import { getSafeKeyObjectFromStorage } from '../../shared/utils/safe-token-storage';
@@ -20,11 +21,12 @@ const PolicyScreen = () => {
         const fetchPolicies = async () => {
             try {
                 const response = await api.get('/api/policies');
-                console.log('Policies:', response.data);
-                setPolicies(response.data);
+                const policyData = response.data?.data ?? response.data ?? [];
+                console.log('Policies:', policyData);
+                setPolicies(policyData);
             } catch (err) {
                 setError('Error cargando las políticas de uso');
-                Alert.alert('Error', 'Unable to load policies. Please try again.');
+                showTamaguiAlert('Error', 'Unable to load policies. Please try again.');
             } finally {
                 setLoading(false);
             }
@@ -62,16 +64,36 @@ const PolicyScreen = () => {
             console.log('resSendApprovedPolicies:', resSendApprovedPolicies);
             router.push('/features/test/TestListScreen');
         } catch (error: any) {
-            Alert.alert('Error', 'Error al aceptar las políticas.');
+            showTamaguiAlert('Error', 'Error al aceptar las políticas.');
         }
     };
 
     const handleDeclinePolicies = () => {
-        Alert.alert(
-            'Políticas Requeridas',
-            'Debe aceptar las políticas para continuar usando la aplicación.',
-            [{ text: 'Entendido', style: 'cancel' }]
-        );
+        console.log('[PolicyScreen] Declinar clicked');
+
+        // Limpiar datos de sesión y políticas
+        const clearSession = () => {
+            try {
+                if (Platform.OS === 'web') {
+                    localStorage.removeItem('policiesAccepted');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                } else {
+                    AsyncStorage.multiRemove([
+                        'policiesAccepted',
+                        'token',
+                        'user',
+                    ]).catch((err: any) =>
+                        console.warn('Error clearing session:', err)
+                    );
+                }
+            } catch (err) {
+                console.warn('Error clearing session:', err);
+            }
+        };
+
+        clearSession();
+        router.replace('/');
     };
 
     const handlePolicyPress = (policy: any) => {

@@ -3,13 +3,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, Modal, Platform, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, Platform, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { getSafeKeyObjectFromStorage } from '../../shared/utils/safe-token-storage';
 import useAuth from '../../shared/hooks/useAuth';
 import useUser, { UserProvider } from '@/context/UserContext';
-import CustomButton from '@/shared/components/ui/CustomButton';
+import useParticipant from '@/context/ParticipantContext';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 import AuthService, { EmailFormData } from '@/shared/services/api/auth';
+import api from '@/shared/services/api/api';
 const mainLogo = require('../../assets/logo-vibra.png');
 
 
@@ -27,6 +30,7 @@ const LoginForm: React.FC = () => {
     const router = useRouter();
     const { login, isAuthenticated } = useAuth();
     const { setUser } = useUser();
+    const { setParticipantFromLogin, refreshParticipant } = useParticipant();
 
     const [formData, setFormData] = useState<EmailFormData>({
         to: 'correo@dominio.com',
@@ -71,10 +75,10 @@ const LoginForm: React.FC = () => {
 
             if (response) {
                 setModalVisible(false);
-                Alert.alert(response.message || response.error);
+                showTamaguiAlert(response.message || response.error);
             }
         } catch (error) {
-            Alert.alert('Error de conexión');
+            showTamaguiAlert('Error de conexión');
         }
     };
 
@@ -94,8 +98,45 @@ const LoginForm: React.FC = () => {
         try {
             const user = await login(email, password);
             setUser(user);
+
+            // Cargar o crear participante después del login
+            try {
+                await refreshParticipant();
+            } catch {
+                // Si no existe participante (404), intentar crearlo
+                try {
+                    const decodedToken = (() => {
+                        try {
+                            const token = user?.access_token;
+                            if (!token) return null;
+                            const base64Url = token.split('.')[1];
+                            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                            const jsonPayload = decodeURIComponent(
+                                atob(base64)
+                                    .split('')
+                                    .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                                    .join('')
+                            );
+                            return JSON.parse(jsonPayload);
+                        } catch { return null; }
+                    })();
+                    const userId = decodedToken?.sub || decodedToken?.userId || decodedToken?._id;
+
+                    if (userId) {
+                        const newParticipant = await api.post('/api/participants', {
+                            userId,
+                            nickname: user?.username || user?.name || 'participante',
+                            avatar: user?.avatar,
+                        });
+                        const participantData = newParticipant.data ?? newParticipant;
+                        await setParticipantFromLogin(participantData);
+                    }
+                } catch (createErr: any) {
+                    console.warn('[LoginForm] Error al crear participante:', createErr.message);
+                }
+            }
         } catch (error: any) {
-            Alert.alert('Error', error.message || 'Credenciales incorrectas o error en la conexión.');
+            showTamaguiAlert('Error', error.message || 'Credenciales incorrectas o error en la conexión.');
         } finally {
             setLoading(false);
         }
@@ -144,7 +185,7 @@ const LoginForm: React.FC = () => {
                 />
             </View>}
             {!isEnabled && <View style={tailwind('flex-row h-24 justify-center w-full mb-3 my-2')}>
-                <CustomButton
+                <TamaguiButton
                     neonEffect={true}
                     title={loading ? 'Cargando...' : 'Conectarse'}
                     variantColor='blue'
@@ -159,7 +200,7 @@ const LoginForm: React.FC = () => {
                     style={[{ flex: 1 }, tailwind('w-full text-xl text-white')]}
                 />
 
-                <CustomButton
+                <TamaguiButton
                     neonEffect={true}
                     title={loading ? 'Cargando...' : 'Registrarse'}
                     variantColor='orange'
@@ -174,7 +215,7 @@ const LoginForm: React.FC = () => {
                     style={[{ flex: 1 }, tailwind('w-full text-xl text-white')]}
                 />
 
-                <CustomButton
+                <TamaguiButton
                     neonEffect={true}
                     title={loading ? 'Cargando...' : 'Acerca de ...'}
                     variantColor='purple'
@@ -222,7 +263,7 @@ const LoginForm: React.FC = () => {
                         />
                         <View style={tailwind('flex-row justify-between items-center mt-4 w-full')}>
 
-                            <CustomButton
+                            <TamaguiButton
                                 neonEffect={true}
                                 icon="cancel"
                                 variantColor='gray'
@@ -232,7 +273,7 @@ const LoginForm: React.FC = () => {
                                 onPress={() => setModalVisible(false)}
                             />
 
-                            <CustomButton
+                            <TamaguiButton
                                 neonEffect={true}
                                 icon="link"
                                 variantColor='red'

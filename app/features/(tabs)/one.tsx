@@ -1,23 +1,75 @@
 import useAuth from '@/shared/hooks/useAuth';
-import { ScrollView, StyleSheet, View, Text } from 'react-native';
+import useParticipant from '@/context/ParticipantContext';
+import { ScrollView, StyleSheet, View, Text, Platform } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import CardComponent from '../../shared/components/ui/CardComponent';
-import CustomButton from '../../shared/components/ui/CustomButton';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 import CardSlider from '../../shared/components/ui/CardSlider';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ActivityHistoryList from '../activity/screens/ActivityHistoryList';
 import FloatButton from '@/shared/components/ui/animation/FloatButton';
+import NoActivityState from '@/shared/components/common/NoActivityState';
+import { ActivityService } from '@/shared/services/api/api';
+import api from '@/shared/services/api/api';
 
 export default function TabOne() {
     const tailwind = useTailwind();
     const { logout } = useAuth();
+    const { refreshParticipant, clearParticipant } = useParticipant();
     const router = useRouter();
     const [historyActivate, setHistoryActivate] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [todayStatus, setTodayStatus] = useState<'loading' | 'active' | 'no_activity'>('loading');
+
+    useEffect(() => {
+        // Refrescar datos del participante desde API, o crearlo si no existe
+        const ensureParticipant = async () => {
+            try {
+                await refreshParticipant();
+            } catch {
+                // Participante no existe — crearlo (caso "Mantener sesión iniciada")
+                try {
+                    let userId: string | null = null;
+                    if (Platform.OS === 'web') {
+                        userId = localStorage.getItem('userId');
+                    } else {
+                        userId = await AsyncStorage.getItem('userId');
+                    }
+                    if (userId) {
+                        await api.post('/api/participants', { userId, nickname: 'participante' });
+                        await refreshParticipant();
+                    }
+                } catch (createErr: any) {
+                    console.warn('[TabOne] No se pudo crear participante:', createErr.message);
+                }
+            }
+        };
+        ensureParticipant();
+
+        ActivityService.getDailyActivity()
+            .then((data: any) => {
+                setTodayStatus(data?.schedule?.status === 'active' ? 'active' : 'no_activity');
+            })
+            .catch(() => setTodayStatus('no_activity'));
+    }, []);
+
+    const handleCheckAgain = () => {
+        setTodayStatus('loading');
+        ActivityService.getDailyActivity()
+            .then((data: any) => {
+                setTodayStatus(data?.schedule?.status === 'active' ? 'active' : 'no_activity');
+            })
+            .catch(() => setTodayStatus('no_activity'));
+    };
 
     return (
         <ScrollView style={[styles.scrollView, tailwind('bg-gray-50 p-4')]}>
+
+            {todayStatus === 'no_activity' && (
+                <NoActivityState variant="banner" onCheckAgain={handleCheckAgain} />
+            )}
 
             {!historyActivate &&
                 <CardComponent />
@@ -48,7 +100,7 @@ export default function TabOne() {
             </View>*/}
             <View style={tailwind('flex-row justify-between items-center mt-6 w-full px-2')}>
                 <View style={tailwind('flex-1 mx-1 py-10')}>
-                    <CustomButton
+                    <TamaguiButton
                         neonEffect={true}
                         title={loading ? 'Cargando...' : 'Actividad diaria'}
                         variantColor='blue'
@@ -65,7 +117,7 @@ export default function TabOne() {
                 </View>
                 {!historyActivate &&
                     <View style={tailwind('flex-1 mx-1 py-10')}>
-                        <CustomButton
+                        <TamaguiButton
                             neonEffect={true}
                             title={loading ? 'Cargando...' : 'Historial'}
                             variantColor='green'
@@ -83,7 +135,7 @@ export default function TabOne() {
                 }
                 {historyActivate &&
                     <View style={tailwind('flex-1 mx-1 py-10')}>
-                        <CustomButton
+                        <TamaguiButton
                             neonEffect={true}
                             title={loading ? 'Cargando...' : 'Inicio'}
                             variantColor='purple'
@@ -100,11 +152,14 @@ export default function TabOne() {
                     </View>
                 }
                 <View style={tailwind('flex-1 mx-1 py-10')}>
-                    <CustomButton
+                    <TamaguiButton
                         neonEffect={true}
                         title='Cerrar sesión'
                         variantColor='red'
-                        onPress={logout}
+                        onPress={async () => {
+                            await clearParticipant();
+                            logout();
+                        }}
                         icon='exit-to-app'
                         buttonType='iconTop'
                         iconSize={24}

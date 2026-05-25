@@ -1,10 +1,12 @@
 import useUser from '@/context/UserContext';
+import useParticipant from '@/context/ParticipantContext';
 import useActivityStore from '@/shared/store/activity.store';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Platform, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Platform, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import ErrorScreen from '../../../shared/components/common/ErrorScreen';
+import NoActivityState from '../../../shared/components/common/NoActivityState';
 import MediaPlayer from '../../../shared/components/media/MediaPlayer';
 import ProgressBarII from '../../../shared/components/ui/ProgressBarNew';
 import calculateScore, { calculateMaxScore } from '../../../shared/utils/score-utils';
@@ -13,25 +15,73 @@ import QuestionSection from '../components/QuestionSection';
 import ScoreCounter from '../components/ScoreCounter';
 import WordSearchGame from '../components/WordSearchGame';
 import { useDailyActivity, useSubmitResponse } from '../hooks/activity';
-import CustomButton from '@/shared/components/ui/CustomButton';
+import useScoreTracker from '../hooks/useScoreTracker';
+import ScoreSummaryBanner from '../components/ScoreSummaryBanner';
+import ActivityCompleteSummary from '../components/ActivityCompleteSummary';
+import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
+import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
+import { ActivityService } from '@/shared/services/api/api';
 import EmotionBoxScreen from './EmotionBoxScreen';
 import DiceGameActivity from '../components/DiceGameActivity';
 import DiceGameScreen from './DiceGameScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getSafeKeyObjectFromStorage } from '@/shared/utils/safe-token-storage';
+import EmotionalAssistant from '../../../shared/components/common/EmotionalAssistant';
+import PeekingBuddy from '../../../shared/components/common/PeekingBuddy';
+import { TRANSITION_MESSAGES } from '../../../shared/constants/emotional-tips';
+
+const ACTIVITY_TYPE_CATEGORY: Record<string, string> = {
+    Question: 'question',
+    WordSearch: 'wordsearch',
+    MatchingConcepts: 'matching',
+    EmotionBox: 'emotionbox',
+    DiceGame: 'dicegame',
+};
+
+const activityTypeToCategory = (type: string): string => ACTIVITY_TYPE_CATEGORY[type] || 'start';
 
 const DailyActivityScreen = () => {
     const tailwind = useTailwind();
     const { user } = useUser();
-    const { data, isLoading, error } = useDailyActivity();
+    const { participant, updateAfterActivity } = useParticipant();
+    const { data, isLoading, error, refetch } = useDailyActivity();
     const { mutate } = useSubmitResponse();
-    const { currentStep, responses, activityType, actions } = useActivityStore();
+    const { currentStep, responses, activityType, games: storeGames, gameIndex, actions } = useActivityStore();
+    const currentGame = storeGames[gameIndex];
+    const scoreTracker = useScoreTracker(data?.activity);
+    const [showSummaryModal, setShowSummaryModal] = useState(false);
+
+    // Determinar el próximo tipo de juego para los botones de navegación
+    const getNextGameType = (): ActivityType | null => {
+        if (storeGames.length > 0) {
+            const nextIdx = gameIndex + 1;
+            if (nextIdx < storeGames.length) return storeGames[nextIdx].type;
+            return null; // Último juego
+        }
+        // Fallback a secuencia fija
+        const fallbackSeq: ActivityType[] = ['Question', 'WordSearch', 'MatchingConcepts', 'EmotionBox', 'DiceGame'];
+        const currIdx = fallbackSeq.indexOf(activityType);
+        if (currIdx >= 0 && currIdx < fallbackSeq.length - 1) return fallbackSeq[currIdx + 1];
+        return null;
+    };
+
+    const GAME_LABELS: Record<string, string> = {
+        WordSearch: 'Sopa de Letras',
+        MatchingConcepts: 'Emparejar Conceptos',
+        EmotionBox: 'Caja de Emociones',
+        DiceGame: 'Juego de Dados',
+    };
+
+    const nextGameType = getNextGameType();
+    const isLastGame = !nextGameType;
     const startTime = 60;
     const [timeLeft, setTimeLeft] = useState(startTime);
     const currentScore = calculateScore(responses as any);
     const maxScore = calculateMaxScore(data?.activity?.questions?.length || 0);
     const [animate, setAnimate] = useState(false);
     const animation = useRef(new Animated.Value(0)).current;
+    const [showTransition, setShowTransition] = useState(false);
+    const [transitionMsg, setTransitionMsg] = useState('');
 
     // Función para obtener userId del storage
     const getUserId = async () => {
@@ -98,27 +148,29 @@ const DailyActivityScreen = () => {
         mutate(responseDto, {
             onSuccess: () => {
                 console.log("CurrentStep:", currentStep);
+
+                // Otorgar puntos por responder pregunta
+                const pointsPerQuestion = 2;
+                updateAfterActivity(pointsPerQuestion).catch((err: any) =>
+                    console.warn('[DailyActivity] Error updating points:', err.message)
+                );
+
                 if (isLastQuestion && activityType === 'Question') {
                     console.log("Última pregunta confirmada, preparando transición a siguiente actividad...");
                     // Si es la última pregunta, mostrar alerta con opción para continuar a la siguiente actividad
                     if (Platform.OS !== 'web') {
-                        Alert.alert(
+                        showTamaguiAlert(
                             'Actividad completada',
                             '¡Has completado todas las preguntas! ¿Deseas continuar con la siguiente actividad?',
-                            [
-                                {
-                                    text: 'Continuar',
-                                    onPress: () => {
-                                        actions.nextActivityType(); // Cambiar al siguiente tipo de actividad (WordSearch)
-                                        actions.reset(); // Reiniciar el contador de pasos
-                                    }
+                            {
+                                primaryLabel: 'Continuar',
+                                onPrimary: () => {
+                                    actions.nextActivityType(); // Cambiar al siguiente tipo de actividad (WordSearch)
+                                    actions.reset(); // Reiniciar el contador de pasos
                                 },
-                                {
-                                    text: 'Salir',
-                                    onPress: () => router.push('/features/(tabs)/one'),
-                                    style: 'cancel'
-                                }
-                            ]
+                                secondaryLabel: 'Salir',
+                                onSecondary: () => router.push('/features/(tabs)/one'),
+                            }
                         );
                     } else {
                         // Para web, podemos mostrar un mensaje y cambiar automáticamente
@@ -141,14 +193,31 @@ const DailyActivityScreen = () => {
                     }
                 }
             },
-            onError: () => Alert.alert('Error al enviar respuestas')
+            onError: () => showTamaguiAlert('Error', 'Error al enviar respuestas')
         });
     };
+
+    // ─── Transiciones entre tipos de actividad ────────────────────────────
+    useEffect(() => {
+        const transition = TRANSITION_MESSAGES[activityType];
+        if (transition) {
+            setTransitionMsg(transition);
+            setShowTransition(true);
+            setTimeout(() => setShowTransition(false), 4000);
+        }
+    }, [activityType]);
+
+    // Cargar juegos dinámicos desde la actividad
+    useEffect(() => {
+        if (data?.activity?.games && data.activity.games.length > 0) {
+            actions.setGames(data.activity.games);
+        }
+    }, [data]);
 
     if (isLoading) return <ActivityIndicator size="large" />;
     if (error) return <ErrorScreen message={error.message} />;
 
-    if (!data || !data.activity) return <ErrorScreen onRetry={() => { router.back() }} message={'Por favor configure una actividad para el día!'} />;
+    if (!data || !data.activity) return <NoActivityState variant="fullscreen" onGoBack={() => router.back()} onCheckAgain={() => refetch()} />;
 
     return (
         <SafeAreaView style={tailwind("flex-1 bg-gray-50 w-full")}>
@@ -160,6 +229,15 @@ const DailyActivityScreen = () => {
                     showsVerticalScrollIndicator={true}
                     style={tailwind("flex-1")}
                 >
+                    {/* Banner de puntaje en tiempo real */}
+                    <ScoreSummaryBanner
+                        currentScore={scoreTracker.currentScore}
+                        maxScore={scoreTracker.maxScore}
+                        progressPercent={scoreTracker.progressPercent}
+                        nextGameName={scoreTracker.nextGame?.name}
+                        nextGamePoints={scoreTracker.nextGame?.points}
+                    />
+
                     <View style={styles.container}>
                         {activityType === 'Question' && <>
                             {currentStep} - {data.activity?.questions?.length}
@@ -197,10 +275,10 @@ const DailyActivityScreen = () => {
                                 <Text style={[styles.gameTitle, tailwind('text-xl font-bold mb-2')]}>Sopa de Letras</Text>
                                 <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Encuentra todas las palabras ocultas en la cuadrícula para ganar puntos.</Text>
                                 <WordSearchGame
-                                    words={['ESPERANZA', 'HONESTO', 'AMOR', 'EMPATIA', 'VIBRA', 'HUMILDAD']}
-                                    gridSize={9}
-                                    timeLimit={300}
-                                    activityId="word-search-activity"
+                                    words={currentGame?.config?.words ?? ['ESPERANZA', 'HONESTO', 'AMOR', 'EMPATIA', 'VIBRA', 'HUMILDAD']}
+                                    gridSize={currentGame?.config?.gridSize ?? 9}
+                                    timeLimit={currentGame?.config?.timeLimit ?? 300}
+                                    activityId={data?.activity?._id ?? "word-search-activity"}
                                 />
                             </View>}
 
@@ -209,15 +287,15 @@ const DailyActivityScreen = () => {
                                 <Text style={[styles.gameTitle, tailwind('text-xl font-bold mb-2')]}>Emparejar conceptos</Text>
                                 <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Relaciona cada concepto con su definición correspondiente para ganar puntos.</Text>
                                 <MatchingConceptsGame
-                                    conceptPairs={[
+                                    conceptPairs={currentGame?.config?.conceptPairs ?? [
                                         { id: '1', concept: 'Vibra', match: 'App para captura de emociones' },
                                         { id: '2', concept: 'Actividad', match: 'Accion para medir emociones' },
                                         { id: '3', concept: 'Reto', match: 'Competencias de emociones' },
                                         { id: '4', concept: 'EPersonal', match: 'Eventos personales' },
                                         { id: '5', concept: 'Ranking', match: 'Nivel entre la comunidad' },
                                     ]}
-                                    timeLimit={180}
-                                    activityId="matching-concepts-activity"
+                                    timeLimit={currentGame?.config?.timeLimit ?? 180}
+                                    activityId={data?.activity?._id ?? "matching-concepts-activity"}
                                 />
                             </View>}
 
@@ -225,93 +303,120 @@ const DailyActivityScreen = () => {
                             <View style={[styles.gameContainer, tailwind('mb-4')]}>
                                 <Text style={[styles.gameTitle, tailwind('text-xl font-bold mb-2')]}>Caja de emociones</Text>
                                 <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Relaciona cada emocion con su respectivo emoticon.</Text>
-                                <EmotionBoxScreen />
+                                <EmotionBoxScreen
+                                    emotions={currentGame?.config?.emotions}
+                                    timeLimit={currentGame?.config?.timeLimit}
+                                />
                             </View>}
 
                         {activityType === 'DiceGame' &&
                             <View style={[styles.gameContainer, tailwind('mb-4')]}>
                                 <Text style={[styles.gameTitle, tailwind('text-xl font-bold mb-2')]}>Juego de dados</Text>
                                 <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Lanza los dados y acierta en las preguntas.</Text>
-                                <DiceGameScreen />
+                                <DiceGameScreen
+                                    questions={currentGame?.config?.questions}
+                                />
                             </View>}
                     </View>
                 </ScrollView>
 
-                {/* Card de transición FIJO en la parte inferior */}
-                <View style={styles.fixedBottomCard}>
-                    {activityType === 'Question' && currentStep >= data.activity?.questions?.length - 1 && (
+                {/* Card de transición FIJO en la parte inferior (oculto cuando se muestra el resumen) */}
+                {!showSummaryModal && <View style={styles.fixedBottomCard}>
+                    {!isLastGame && (
                         <View style={tailwind('flex items-center justify-center py-3 px-4')}>
                             <Text style={tailwind('text-center mb-2 text-gray-700 text-base font-medium')}>¿Listo para la siguiente actividad?</Text>
-                            <CustomButton
-                                title="Continuar"
+                            <TamaguiButton
+                                title={nextGameType ? `Continuar a ${GAME_LABELS[nextGameType] || nextGameType}` : 'Continuar'}
                                 variantColor='blue'
                                 neonEffect={true}
-                                onPress={() => {
-                                    actions.nextActivityType();
-                                }}
+                                onPress={() => { actions.nextActivityType(); }}
                                 icon="arrow-forward"
                             />
                         </View>
                     )}
-                    {activityType === 'WordSearch' && (
-                        <View style={tailwind('flex items-center justify-center py-3 px-4')}>
-                            <Text style={tailwind('text-center mb-2 text-gray-700 text-base font-medium')}>¿Listo para la siguiente actividad?</Text>
-                            <CustomButton
-                                title="Continuar a Emparejar Conceptos"
-                                variantColor='blue'
-                                neonEffect={true}
-                                onPress={() => {
-                                    actions.nextActivityType();
-                                }}
-                                icon="arrow-forward"
-                            />
-                        </View>
-                    )}
-                    {activityType === 'MatchingConcepts' && (
-                        <View style={tailwind('flex items-center justify-center py-3 px-4')}>
-                            <Text style={tailwind('text-center mb-2 text-gray-700 text-base font-medium')}>¿Listo para la siguiente actividad?</Text>
-                            <CustomButton
-                                title="Continuar a la caja de emociones"
-                                variantColor='blue'
-                                neonEffect={true}
-                                onPress={() => {
-                                    actions.nextActivityType();
-                                }}
-                                icon="arrow-forward"
-                            />
-                        </View>
-                    )}
-                    {activityType === 'EmotionBox' && (
-                        <View style={tailwind('flex items-center justify-center py-3 px-4')}>
-                            <Text style={tailwind('text-center mb-2 text-gray-700 text-base font-medium')}>¿Listo para la siguiente actividad?</Text>
-                            <CustomButton
-                                title="Continuar a juego de dados"
-                                variantColor='blue'
-                                neonEffect={true}
-                                onPress={() => {
-                                    actions.nextActivityType();
-                                }}
-                                icon="arrow-forward"
-                            />
-                        </View>
-                    )}
-                    {activityType === 'DiceGame' && (
+                    {isLastGame && (
                         <View style={tailwind('flex items-center justify-center py-3 px-4')}>
                             <Text style={tailwind('text-center mb-2 text-gray-700 text-base font-medium')}>¿Has completado todas las actividades?</Text>
-                            <CustomButton
+                            <TamaguiButton
                                 title="Finalizar Actividades"
                                 variantColor='green'
                                 neonEffect={true}
-                                onPress={() => {
-                                    actions.reset();
-                                    router.push('/features/(tabs)/one');
+                                onPress={async () => {
+                                    // Otorgar bonus por completar todas las actividades
+                                    const completionBonus = 10;
+                                    try {
+                                        await updateAfterActivity(completionBonus);
+                                    } catch (err: any) {
+                                        console.warn('[DailyActivity] Error awarding completion bonus:', err.message);
+                                    }
+
+                                    // Registrar completación de actividad (ActivityCompletion)
+                                    try {
+                                        const participantData = participant;
+                                        if (participantData?._id && data?.activity?._id) {
+                                            const gamesCompleted = (scoreTracker.gamesStatus || [])
+                                                .filter((g: any) => g.completed)
+                                                .map((g: any) => ({
+                                                    type: g.type,
+                                                    score: g.earnedPoints,
+                                                    maxScore: g.maxPoints,
+                                                }));
+
+                                            await ActivityService.createCompletion({
+                                                participant: participantData._id,
+                                                activity: data.activity._id,
+                                                plannedScore: scoreTracker.maxScore,
+                                                achievedScore: scoreTracker.currentScore + completionBonus,
+                                                gamesCompleted,
+                                            });
+                                        }
+                                    } catch (err: any) {
+                                        console.warn('[DailyActivity] Error creating completion:', err.message);
+                                    }
+
+                                    // Mostrar resumen antes de salir
+                                    setShowSummaryModal(true);
                                 }}
                                 icon="check"
                             />
                         </View>
                     )}
-                </View>
+                </View>}
+
+                {/* Banner de transición entre tipos de actividad */}
+                {showTransition && (
+                    <EmotionalAssistant
+                        visible={true}
+                        emoji="✨"
+                        message={transitionMsg}
+                        position="banner"
+                        autoHideMs={4000}
+                        onDismiss={() => setShowTransition(false)}
+                    />
+                )}
             </View>
+
+            {/* Modal de resumen al finalizar */}
+            <ActivityCompleteSummary
+                visible={showSummaryModal}
+                currentScore={scoreTracker.currentScore}
+                maxScore={scoreTracker.maxScore}
+                gamesStatus={scoreTracker.gamesStatus}
+                currentStreak={participant?.currentStreak || 0}
+                maxStreak={participant?.maxStreak || 0}
+                bonusPoints={10}
+                onClose={() => {
+                    setShowSummaryModal(false);
+                    actions.reset();
+                    router.push('/features/(tabs)/one');
+                }}
+            />
+
+            {/* PeekingBuddy — ente animado siempre presente */}
+            <PeekingBuddy
+                tips={data?.activity?.tips}
+                currentCategory={activityTypeToCategory(activityType)}
+            />
         </SafeAreaView>
     );
 };
