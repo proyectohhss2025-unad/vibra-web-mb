@@ -2,7 +2,7 @@ import React from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import useParticipant from '@/context/ParticipantContext';
-import useAuth from '@/shared/hooks/useAuth';
+import useAuthContext from '@/context/AuthContext';
 
 const LEVEL_EMOJIS: Record<string, string> = {
   bronce: '🥉',
@@ -12,31 +12,46 @@ const LEVEL_EMOJIS: Record<string, string> = {
   diamante: '👑',
 };
 
-const ProfileHeader: React.FC = () => {
+interface ProfileHeaderProps {
+  onEditPress?: () => void;
+}
+
+const ProfileHeader: React.FC<ProfileHeaderProps> = ({ onEditPress }) => {
   const tailwind = useTailwind();
-  const { participant, clearParticipant } = useParticipant();
-  const { logout } = useAuth();
+  const { participant } = useParticipant();
+  const { logout } = useAuthContext();
 
   const displayName = participant?.nickname || 'Participante';
   const levelEmoji = LEVEL_EMOJIS[participant?.level || 'bronce'] || '🥉';
   const avatarUrl = participant?.avatar;
 
-  const handleLogout = async () => {
-    await clearParticipant();
+  const handleLogout = () => {
     logout();
   };
 
   return (
     <View style={tailwind('items-center py-6 px-4')}>
-      {/* Avatar */}
-      <View style={tailwind('w-20 h-20 rounded-full bg-indigo-100 items-center justify-center mb-3')}>
-        {avatarUrl ? (
-          <Image
-            source={{ uri: avatarUrl }}
-            style={{ width: 80, height: 80, borderRadius: 40 }}
-          />
-        ) : (
-          <Text style={tailwind('text-3xl')}>{levelEmoji}</Text>
+      {/* Avatar + Badge editar */}
+      <View style={tailwind('relative mb-3')}>
+        <View style={tailwind('w-20 h-20 rounded-full bg-indigo-100 items-center justify-center')}>
+          {avatarUrl ? (
+            <Image
+              source={{ uri: avatarUrl }}
+              style={{ width: 80, height: 80, borderRadius: 40 }}
+            />
+          ) : (
+            <Text style={tailwind('text-3xl')}>{levelEmoji}</Text>
+          )}
+        </View>
+        {onEditPress && (
+          <TouchableOpacity
+            onPress={onEditPress}
+            style={tailwind(
+              'absolute bottom-0 right-0 w-8 h-8 bg-indigo-600 rounded-full items-center justify-center border-2 border-white',
+            )}
+          >
+            <Text style={tailwind('text-white text-sm font-bold')}>✏️</Text>
+          </TouchableOpacity>
         )}
       </View>
 

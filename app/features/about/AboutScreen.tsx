@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Image, Linking, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 import { useTailwind } from 'tailwind-rn';
@@ -15,21 +15,24 @@ const sponsors = [
         name: 'UNAD',
         logo: require('../../assets/sponsors/logo_unad.png'),
         description: 'Universidad Nacional Abierta y a Distancia',
-        fullDescription: 'La Universidad Nacional Abierta y a Distancia (UNAD) es una institución pública de educación superior, autónoma, innovadora y flexible.'
+        fullDescription: 'La Universidad Nacional Abierta y a Distancia (UNAD) es una institución pública de educación superior, autónoma, innovadora y flexible.',
+        url: 'https://www.unad.edu.co/'
     },
     {
         id: 2,
         name: 'SEMILLERO',
         logo: require('../../assets/sponsors/logo_semillero.jpg'),
         description: 'Semillero de Investigación',
-        fullDescription: 'Semillero de investigación dedicado al desarrollo de tecnologías innovadoras.'
+        fullDescription: 'Semillero de investigación dedicado al desarrollo de tecnologías innovadoras.',
+        url: ''
     },
     {
         id: 3,
         name: 'SEMILLERO',
         logo: require('../../assets/sponsors/ciencia_curare.png'),
         description: 'Semillero 2',
-        fullDescription: 'Grupo de investigación enfocado en el avance de la ciencia y la tecnología.'
+        fullDescription: 'Grupo de investigación enfocado en el avance de la ciencia y la tecnología.',
+        url: ''
     }
 ];
 
@@ -39,21 +42,24 @@ const developers = [
         name: 'Ermes Guarnizo Motta',
         role: 'Designer and Product Owner',
         avatar: require('../../assets/sponsors/ermes_guarnizo_motta.jpeg'),
-        bio: 'Diseñador UX/UI con experiencia en la creación de experiencias de usuario intuitivas y atractivas. Product Owner del proyecto Vibra.'
+        bio: 'Diseñador UX/UI con experiencia en la creación de experiencias de usuario intuitivas y atractivas. Product Owner del proyecto Vibra.',
+        url: ''
     },
     {
         id: 2,
         name: 'Yovany Suárez Silva',
         role: 'Software Engineer & Lead Developer',
         avatar: require('../../assets/sponsors/6803296.jpeg'),
-        bio: 'Ingeniero de software con amplia experiencia en desarrollo de aplicaciones móviles y web. Líder técnico del proyecto Vibra.'
+        bio: 'Ingeniero de software con amplia experiencia en desarrollo de aplicaciones móviles y web. Líder técnico del proyecto Vibra.',
+        url: ''
     },
     {
         id: 3,
         name: 'Lic. Javier Miranda',
         role: 'Líder de Investigación',
-        avatar: require('../../assets/sponsors/javier_miranda.png'), // Placeholder - replace with actual image
-        bio: 'Licenciado con amplia experiencia en investigación. Líder del equipo de investigación del proyecto Vibra.'
+        avatar: require('../../assets/sponsors/javier_miranda.png'),
+        bio: 'Licenciado con amplia experiencia en investigación. Líder del equipo de investigación del proyecto Vibra.',
+        url: ''
     }
 ];
 
@@ -275,6 +281,18 @@ const AboutScreen = () => {
                                         <Text style={styles.modalDescription}>{selectedItem.bio}</Text>
                                     </>
                                 )}
+                                {selectedItem?.url ? (
+                                    <TouchableOpacity
+                                        style={styles.linkButton}
+                                        onPress={() => {
+                                            Linking.openURL(selectedItem.url);
+                                            setModalVisible(false);
+                                        }}
+                                    >
+                                        <MaterialIcons name="open-in-new" size={18} color="#0066FF" />
+                                        <Text style={styles.linkText}>Visitar sitio web</Text>
+                                    </TouchableOpacity>
+                                ) : null}
                                 <TamaguiButton
                                     title="Cerrar"
                                     onPress={() => setModalVisible(false)}
@@ -466,6 +484,24 @@ const styles = StyleSheet.create({
     },
     modalButton: {
         width: '100%',
+    },
+    linkButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        marginBottom: 12,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#0066FF',
+        backgroundColor: 'rgba(0, 102, 255, 0.05)',
+    },
+    linkText: {
+        color: '#0066FF',
+        fontSize: 14,
+        fontWeight: '600',
+        marginLeft: 6,
     },
 });
 

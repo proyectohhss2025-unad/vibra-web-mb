@@ -8,8 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { Image, Platform, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { getSafeKeyObjectFromStorage } from '@/shared/utils/safe-token-storage';
-import useAuth from '@/shared/hooks/useAuth';
-import useUser from '@/context/UserContext';
+import useAuthContext from '@/context/AuthContext';
 import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
 import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 import TamaguiGlassCard from '@/shared/components/ui/tamagui/TamaguiGlassCard';
@@ -23,8 +22,7 @@ type LoginCardProps = {
 const LoginCard: React.FC<LoginCardProps> = ({ onForgotPassword }) => {
     const tailwind = useTailwind();
     const router = useRouter();
-    const { login, isAuthenticated } = useAuth();
-    const { setUser } = useUser();
+    const { login, isAuthenticated } = useAuthContext();
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -78,7 +76,6 @@ const LoginCard: React.FC<LoginCardProps> = ({ onForgotPassword }) => {
         try {
             const user = await login(username, password);
             console.log('Login exitoso, user:', user);
-            setUser(user);
             // El redirect ocurre en el useEffect que observa isAuthenticated
         } catch (error: any) {
             console.error('Login error:', error);

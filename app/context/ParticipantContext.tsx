@@ -127,9 +127,18 @@ export const ParticipantProvider: React.FC<{ children: ReactNode }> = ({ childre
       await saveParticipantToStorage(data);
       setError(null);
     } catch (err: any) {
-      console.error('[ParticipantContext] Error refreshing participant:', err.message);
-      setError(err.message || 'Error al cargar datos del participante');
-      throw err; // Re-lanzar para que el caller (LoginForm) pueda manejarlo
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message || err.message;
+
+      if (status === 404) {
+        // Participante no existe — lanzar para que el caller lo cree
+        console.warn('[ParticipantContext] Participant not found for user');
+        throw err;
+      }
+
+      // Error de red o del servidor — solo loguear, no interrumpir
+      console.warn('[ParticipantContext] Could not refresh participant:', msg);
+      setError(null); // No mostrar error al usuario por fallo de red
     }
   }, []);
 

@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
-import { router, Slot, useRouter } from "expo-router";
+import { router, Slot } from "expo-router";
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from "react";
-import { ImageBackground, Platform, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ImageBackground, Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { TailwindProvider } from "tailwind-rn";
 import { TamaguiProvider } from 'tamagui';
@@ -13,7 +13,11 @@ import utilities from "../tailwind.json";
 import tamaguiConfig from '../config/tamagui.config';
 import { UserProvider } from './context/UserContext';
 import { ParticipantProvider } from './context/ParticipantContext';
-import useAuth from "./shared/hooks/useAuth";
+import { AuthProvider } from './context/AuthContext';
+import useNetworkStatus from '@/shared/hooks/useNetworkStatus';
+import OfflineScreen from '@/shared/components/OfflineScreen';
+import OfflineBanner from '@/shared/components/OfflineBanner';
+import FloatingFeedbackBtn from '@/shared/components/ui/FloatingFeedbackBtn';
 
 function useNotificationObserver() {
   useEffect(() => {
@@ -48,40 +52,45 @@ function useNotificationObserver() {
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  const router = useRouter();
-  const { isAuthenticated, checkAuth } = useAuth();
+  useNotificationObserver();
+
+  const { isConnected, checkConnection } = useNetworkStatus();
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   useEffect(() => {
-    checkAuth().then((authenticated: any) => {
-      console.log("Authenticated:", authenticated);
-      if (isAuthenticated) {
-        router.replace('/features/(tabs)/one');
-      } else {
-        //router.replace('/');
-        router.replace('/features/(tabs)/one');
-      }
-    });
-  }, []);
+    checkConnection().then(() => setInitialCheckDone(true));
+  }, [checkConnection]);
 
-  useNotificationObserver();
+  const showOfflineScreen = initialCheckDone && !isConnected;
+
   return (
     <QueryClientProvider client={queryClient}>
       <TailwindProvider utilities={utilities}>
         <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
         <UserProvider>
           <ParticipantProvider>
+          <AuthProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <ImageBackground
-              source={require("./assets/sponsors/fondo_vibra_new.jpg")}
-              style={styles.background}
-              resizeMode="cover"
-            >
-              <StatusBar style="inverted" />
-              <TamaguiAlertProvider>
-              <Slot />
-              </TamaguiAlertProvider>
-            </ImageBackground>
+            {showOfflineScreen ? (
+              <OfflineScreen onRetry={() => checkConnection()} />
+            ) : (
+              <ImageBackground
+                source={require("./assets/sponsors/fondo_vibra_new.jpg")}
+                style={styles.background}
+                resizeMode="cover"
+              >
+                <StatusBar style="inverted" />
+                <TamaguiAlertProvider>
+                  <View style={{ flex: 1 }}>
+                    <OfflineBanner visible={initialCheckDone && !isConnected} />
+                    <Slot />
+                    <FloatingFeedbackBtn />
+                  </View>
+                </TamaguiAlertProvider>
+              </ImageBackground>
+            )}
           </GestureHandlerRootView>
+          </AuthProvider>
           </ParticipantProvider>
         </UserProvider>
         </TamaguiProvider>

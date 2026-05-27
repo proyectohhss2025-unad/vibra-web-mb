@@ -3,9 +3,13 @@
  * @module services/api
  */
 import ActivityResponse, { PaginatedResponse } from '@/shared/types/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { router } from 'expo-router';
 import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import config from '../../../../config/env.json';
+import eventBus from '@/shared/utils/event-bus';
 
 /**
  * Base URL for the API obtained from environment configuration
@@ -36,6 +40,22 @@ const API_BASE_URL = Platform.select({
     web: process.env.API_URL
 });
 
+/**
+ * Obtiene el token JWT almacenado según la plataforma
+ * - Web: localStorage
+ * - Mobile: SecureStore (expo-secure-store)
+ * @returns {Promise<string | null>}
+ */
+const getToken = async (): Promise<string | null> => {
+    try {
+        if (Platform.OS === 'web') {
+            return localStorage.getItem('authToken');
+        }
+        return await SecureStore.getItemAsync('authToken');
+    } catch {
+        return null;
+    }
+};
 
 // Interceptor para JWT
 /**
@@ -44,13 +64,56 @@ const API_BASE_URL = Platform.select({
  * @param {Object} config - Axios request configuration
  * @returns {Promise<Object>} - Modified request configuration
  */
-/* api.interceptors.request.use(async (config) => {
-    const token = await storage.getToken();
+api.interceptors.request.use(async (config) => {
+    const token = await getToken();
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
-});*/
+});
+
+// Interceptor de respuesta: manejar 401 (token expirado/inválido) y errores de red
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        // Detectar errores de conexión (sin respuesta del servidor)
+        if (!error?.response) {
+            const isNetworkError =
+                error?.code === 'ERR_NETWORK' ||
+                error?.code === 'ECONNABORTED' ||
+                error?.message?.includes?.('Network Error') ||
+                error?.message?.includes?.('timeout') ||
+                error?.message?.includes?.('socket hang up');
+
+            if (isNetworkError) {
+                eventBus.emit('network_error');
+            }
+            return Promise.reject(error);
+        }
+
+        if (error?.response?.status === 401) {
+            const url = error.config?.url || '';
+            const isPublicRoute = url.includes('/api/auth/login') || url.includes('/api/auth/register');
+            if (!isPublicRoute) {
+                // Limpiar token y redirigir al login
+                try {
+                    if (Platform.OS === 'web') {
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('userId');
+                        window.location.href = '/';
+                    } else {
+                        await SecureStore.deleteItemAsync('authToken');
+                        await AsyncStorage.removeItem('userId');
+                        router.replace('/');
+                    }
+                } catch {
+                    // ignorar errores de storage
+                }
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 
 /**
  * Service for handling activities

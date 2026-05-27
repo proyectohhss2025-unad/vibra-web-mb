@@ -2,11 +2,11 @@ import React from "react";
 import { View, Text } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
-import useAuth from "@/shared/hooks/useAuth";
+import useAuthContext from "@/context/AuthContext";
 
 export default function FloatButton() {
     const scale = useSharedValue(1);
-    const { logout } = useAuth();
+    const { logout } = useAuthContext();
     const tap = Gesture.Tap()
         .onBegin(() => {
             scale.value = withSpring(0.8, { damping: 10, stiffness: 200 });

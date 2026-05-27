@@ -47,14 +47,17 @@ const LoginForm: React.FC = () => {
 
     useEffect(() => {
         if (isAuthenticated) {
-            const policiesAccepted = Platform.OS == "web"
-                ? getSafeKeyObjectFromStorage('policiesAccepted')
-                : AsyncStorage.getItem("policiesAccepted");
-            if (policiesAccepted === 'true') {
-                router.push('/features/test/TestListScreen');
-            } else {
-                router.push('/features/policy/PolicyScreen');
-            }
+            const checkPolicies = async () => {
+                const policiesAccepted = Platform.OS === "web"
+                    ? getSafeKeyObjectFromStorage('policiesAccepted')
+                    : await AsyncStorage.getItem("policiesAccepted");
+                if (policiesAccepted === 'true') {
+                    router.replace('/features/test/TestListScreen');
+                } else {
+                    router.replace('/features/policy/PolicyScreen');
+                }
+            };
+            checkPolicies();
         }
     }, [isAuthenticated])
 

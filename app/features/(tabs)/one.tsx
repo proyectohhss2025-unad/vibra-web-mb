@@ -1,4 +1,4 @@
-import useAuth from '@/shared/hooks/useAuth';
+import useAuthContext from '@/context/AuthContext';
 import useParticipant from '@/context/ParticipantContext';
 import { ScrollView, StyleSheet, View, Text, Platform } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
@@ -16,8 +16,8 @@ import api from '@/shared/services/api/api';
 
 export default function TabOne() {
     const tailwind = useTailwind();
-    const { logout } = useAuth();
-    const { refreshParticipant, clearParticipant } = useParticipant();
+    const { logout } = useAuthContext();
+    const { refreshParticipant } = useParticipant();
     const router = useRouter();
     const [historyActivate, setHistoryActivate] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -156,8 +156,7 @@ export default function TabOne() {
                         neonEffect={true}
                         title='Cerrar sesión'
                         variantColor='red'
-                        onPress={async () => {
-                            await clearParticipant();
+                        onPress={() => {
                             logout();
                         }}
                         icon='exit-to-app'

@@ -1,7 +1,8 @@
-import useAuth from '@/shared/hooks/useAuth';
+import useAuthContext from '@/context/AuthContext';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Tabs, usePathname } from 'expo-router';
+import { router, Tabs, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
@@ -10,8 +11,17 @@ const logoUnad = require('../../assets/sponsors/logo_unad.png');
 
 export default function TabsLayout() {
     const tailwind = useTailwind();
-    const { logout } = useAuth();
+    const { isAuthenticated, isLoading, logout, checkAuth } = useAuthContext();
     const pathname = usePathname();
+
+    // ─── Guard de navegación ───
+    useEffect(() => {
+        const verify = async () => {
+        const ok = await checkAuth();
+        if (!ok) router.replace('/');
+        };
+        if (!isAuthenticated) verify();
+    }, []);
 
     const getTabStyle = (tabName: string) => {
         const isStart = pathname.includes(tabName);
