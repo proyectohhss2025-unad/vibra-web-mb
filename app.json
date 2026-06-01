@@ -1,18 +1,13 @@
 {
   "expo": {
     "name": "Vibra",
-    "slug": "Vibra",
+    "slug": "vibraunad",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "scheme": "vibra",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+
     "ios": {
       "supportsTablet": true
     },
@@ -43,13 +38,6 @@
       [
         "expo-notifications",
         {
-          "icon": "./local/assets/notification_icon.png",
-          "color": "#ffffff",
-          "defaultChannel": "default",
-          "sounds": [
-            "./local/assets/notification_sound.wav",
-            "./local/assets/notification_sound_other.wav"
-          ],
           "enableBackgroundRemoteNotifications": false
         }
       ],
@@ -60,6 +48,18 @@
           "supportsPictureInPicture": true
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {
+        "origin": "https://app.vibraunad.com.co",
+        "asyncRoutes": {
+          "app": "./app/**/*.tsx"
+        }
+      },
+      "eas": {
+        "projectId": "5a52374a-7c54-4fd0-8f0c-6d60f3090f54"
+      }
+    },
+    "owner": "desobsesor"
   }
 }

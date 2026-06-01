@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-//import DocumentPicker from 'react-native-document-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import Video from 'react-native-video';
 import api from '../../services/api/api';

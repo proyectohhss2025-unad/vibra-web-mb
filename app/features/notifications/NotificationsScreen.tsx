@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Button } from 'react-native';
-import PushNotification from 'react-native-push-notification';
+import { Alert, View, Text, FlatList, Button } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 
 // Tipo para las notificaciones
@@ -14,29 +13,8 @@ type Notification = {
 const NotificationsScreen = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
-    // Configurar Push Notifications
+    // Firebase push notifications listener
     useEffect(() => {
-        // Configuración de react-native-push-notification
-        /*PushNotification.configure({
-            onNotification: function (notification: any) {
-                console.log('Notificación recibida:', notification);
-                addNotification({
-                    id: notification.id,
-                    title: notification.title || 'Notificación Push',
-                    message: notification.message || 'Mensaje de notificación',
-                    isPush: true,
-                });
-            },
-            permissions: {
-                alert: true,
-                badge: true,
-                sound: true,
-            },
-            popInitialNotification: true,
-            requestPermissions: true,
-        });
-
-        // Escuchar notificaciones en primer plano (Firebase)
         const unsubscribe = messaging().onMessage(async (remoteMessage) => {
             Alert.alert(
                 remoteMessage.notification?.title ?? 'Notificación Push',
@@ -50,7 +28,7 @@ const NotificationsScreen = () => {
             });
         });
 
-        return () => unsubscribe();*/
+        return () => unsubscribe();
     }, []);
 
     // Agregar una notificación interna

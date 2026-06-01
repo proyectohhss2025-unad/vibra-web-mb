@@ -6,8 +6,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import AuthService from '@/shared/services/api/auth';
+import { TestsApi } from '@/shared/services/api/api';
 import useParticipant from './ParticipantContext';
 import useUser from './UserContext';
 
@@ -116,6 +117,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (token) await saveToken(token);
       if (userId) await saveUserId(userId);
 
+      // ── Flujo inicial: verificar tests pendientes tipo "initial" ──
+      if (userId) {
+        try {
+          const pending = await TestsApi.getPendingByType('initial', userId);
+          if (pending.total > 0) {
+            // Redirigir a pantalla de tests iniciales
+            router.replace(`/features/test-prompt?type=initial&userId=${userId}`);
+            return response;
+          }
+        } catch {
+          // Si falla la consulta, continuar con el flujo normal
+        }
+      }
+
       return response;
     } catch (error) {
       setIsAuthenticated(false);
@@ -147,6 +162,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // ─── Logout unificado ───
   const logout = useCallback(async () => {
+    // 0. Obtener userId antes de limpiar
+    let userId: string | null = null;
+    try {
+      if (Platform.OS === 'web') {
+        userId = localStorage.getItem('userId');
+      } else {
+        userId = await AsyncStorage.getItem('userId');
+      }
+    } catch {
+      // ignorar
+    }
+
+    // ── Flujo final: verificar tests pendientes tipo "final" ──
+    if (userId) {
+      try {
+        const pending = await TestsApi.getPendingByType('final', userId);
+        if (pending.total > 0) {
+          // Redirigir a pantalla de tests finales antes del logout
+          router.replace(`/features/test-prompt?type=final&userId=${userId}`);
+          return; // No continuar con el logout todavía
+        }
+      } catch {
+        // Si falla la consulta, continuar con el logout normal
+      }
+    }
+
     // 1. Limpiar storage (token, userId, participant)
     await removeAuthData();
 

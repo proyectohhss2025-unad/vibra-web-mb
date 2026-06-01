@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, PanResponder, Dimensions, Image, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSubmitResponse } from '../hooks/activity';
@@ -23,47 +23,34 @@ const DEFAULT_EMOTIONS: EmotionConfig[] = [
 
 /**
  * Componente de actividad de Caja de Emociones
- * Permite arrastrar emociones a dos cajas diferentes: "emociones sanas" y "emociones por gestionar"
- * @param {EmotionBoxActivityProps} props - Propiedades del componente
- * @returns {JSX.Element} Componente EmotionBoxActivity
+ * Click en emoción para seleccionar, luego click en caja destino para colocar
  */
 const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
     activityId,
     emotions = DEFAULT_EMOTIONS,
     onComplete,
-    timeLimit = 120, // 2 minutos por defecto
+    timeLimit = 120,
 }) => {
     const tailwind = useTailwind();
     const { user } = useUser();
     const { mutate: submitResponse } = useSubmitResponse();
 
-    // Estado para las emociones disponibles y colocadas
     const [availableEmotions, setAvailableEmotions] = useState<EmotionConfig[]>(emotions);
     const [healthyBoxEmotions, setHealthyBoxEmotions] = useState<EmotionConfig[]>([]);
     const [manageBoxEmotions, setManageBoxEmotions] = useState<EmotionConfig[]>([]);
 
-    // Estado para el tiempo y puntuación
     const [timeRemaining, setTimeRemaining] = useState<number>(timeLimit);
     const [score, setScore] = useState<number>(0);
     const [isCompleted, setIsCompleted] = useState<boolean>(false);
     const [startTime] = useState<number>(Date.now());
 
-    // Referencias para las cajas
-    const healthyBoxRef = useRef<View>(null);
-    const manageBoxRef = useRef<View>(null);
+    // Click-based selection: emoción seleccionada actualmente
+    const [selectedEmotion, setSelectedEmotion] = useState<EmotionConfig | null>(null);
 
-    // Medidas de las cajas
-    const [healthyBoxLayout, setHealthyBoxLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
-    const [manageBoxLayout, setManageBoxLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
-
-    // Estado para la emoción que se está arrastrando actualmente
-    const [currentDragEmotion, setCurrentDragEmotion] = useState<EmotionConfig | null>(null);
-
-    // Animaciones para efectos visuales
+    // Animaciones
     const boxPulseAnim = useRef(new Animated.Value(1)).current;
     const successAnim = useRef(new Animated.Value(0)).current;
 
-    // Función para obtener userId del storage
     const getUserId = async () => {
         if (Platform.OS === 'web') {
             return getSafeKeyObjectFromStorage('userId');
@@ -75,7 +62,6 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
     // Temporizador
     useEffect(() => {
         if (isCompleted) return;
-
         const timer = setInterval(() => {
             setTimeRemaining(prev => {
                 if (prev <= 1) {
@@ -86,7 +72,6 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
                 return prev - 1;
             });
         }, 1000);
-
         return () => clearInterval(timer);
     }, [isCompleted]);
 
@@ -108,37 +93,89 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
         ).start();
     }, []);
 
-    // Función para manejar la finalización de la actividad
+    // Click en emoción disponible: seleccionar/deseleccionar
+    const handleEmotionTap = (emotion: EmotionConfig) => {
+        if (isCompleted) return;
+        // Si ya está seleccionada, deseleccionar
+        if (selectedEmotion?.id === emotion.id) {
+            setSelectedEmotion(null);
+        } else {
+            setSelectedEmotion(emotion);
+        }
+    };
+
+    // Click en caja destino: colocar emoción seleccionada
+    const handleBoxTap = (targetBox: 'sana' | 'gestionar') => {
+        if (isCompleted || !selectedEmotion) return;
+
+        const emotion = selectedEmotion;
+        const isCorrect = emotion.type === targetBox;
+
+        // Calcular el estado POSTERIOR a la colocación (para handleActivityComplete)
+        const nextHealthy = targetBox === 'sana' ? [...healthyBoxEmotions, emotion] : healthyBoxEmotions;
+        const nextManage = targetBox === 'gestionar' ? [...manageBoxEmotions, emotion] : manageBoxEmotions;
+        const nextAvailable = availableEmotions.filter(e => e.id !== emotion.id);
+
+        // Colocar emoción en la caja
+        if (targetBox === 'sana') {
+            setHealthyBoxEmotions(nextHealthy);
+        } else {
+            setManageBoxEmotions(nextManage);
+        }
+
+        // Remover de disponibles
+        setAvailableEmotions(nextAvailable);
+        setSelectedEmotion(null);
+
+        // Actualizar puntuación
+        if (isCorrect) {
+            setScore(prev => prev + 10);
+            playSuccessAnimation();
+        } else {
+            setScore(prev => Math.max(0, prev - 5));
+        }
+
+        // Verificar si ya no quedan emociones (usar nextAvailable que ya tiene el valor post-actualización)
+        if (nextAvailable.length === 0) {
+            handleActivityCompleteWith(nextHealthy, nextManage);
+        }
+    };
+
+    // Finalizar actividad (usado por el timer)
     const handleActivityComplete = async () => {
         if (isCompleted) return;
+        await finishGame(healthyBoxEmotions, manageBoxEmotions);
+    };
 
+    // Finalizar actividad con arrays explícitos (evita stale closure al colocar última emoción)
+    const handleActivityCompleteWith = async (healthy: EmotionConfig[], manage: EmotionConfig[]) => {
+        if (isCompleted) return;
+        await finishGame(healthy, manage);
+    };
+
+    const finishGame = async (healthy: EmotionConfig[], manage: EmotionConfig[]) => {
+        if (isCompleted) return;
         setIsCompleted(true);
         const timeSpent = Math.round((Date.now() - startTime) / 1000);
 
-        // Calcular puntuación final y registrar colocaciones
         const placements: EmotionPlacement[] = [
-            ...healthyBoxEmotions.map(emotion => ({
+            ...healthy.map(emotion => ({
                 emotionId: emotion.id,
-                boxType: 'sana',
+                boxType: 'sana' as const,
                 isCorrect: emotion.type === 'sana',
             })),
-            ...manageBoxEmotions.map(emotion => ({
+            ...manage.map(emotion => ({
                 emotionId: emotion.id,
-                boxType: 'gestionar',
+                boxType: 'gestionar' as const,
                 isCorrect: emotion.type === 'gestionar',
             })),
         ];
 
         const correctPlacements = placements.filter(p => p.isCorrect).length;
         const finalScore = Math.round((correctPlacements / emotions.length) * 100);
-
         setScore(finalScore);
 
-        // Obtener userId del storage
         const userId = await getUserId();
-        console.log('EmotionBoxActivity - userId:', userId);
-
-        // Preparar resultado para API
         const result: EmotionActivityResult = {
             studentId: userId || '',
             score: finalScore,
@@ -146,19 +183,14 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
             placements,
         };
 
-        // Enviar resultado a la API
         submitResponse({
             activityId,
             userId: userId || '',
             answers: result,
         });
 
-        // Llamar al callback si existe
-        if (onComplete) {
-            onComplete(result);
-        }
+        if (onComplete) onComplete(result);
 
-        // Animación de éxito
         Animated.timing(successAnim, {
             toValue: 1,
             duration: 500,
@@ -166,100 +198,13 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
         }).start();
     };
 
-    // Crear un PanResponder para cada emoción
-    const createPanResponder = (emotion: EmotionConfig) => {
-        const pan: any = useRef(new Animated.ValueXY()).current;
-
-        const panResponder = PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onPanResponderGrant: () => {
-                setCurrentDragEmotion(emotion);
-                pan.setOffset({
-                    x: pan.x?._value,
-                    y: pan.y?._value,
-                });
-                pan.setValue({ x: 0, y: 0 });
-            },
-            onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
-                useNativeDriver: false,
-            }),
-            onPanResponderRelease: (_, gesture) => {
-                // Verificar si la emoción se soltó en alguna de las cajas
-                const isInHealthyBox =
-                    gesture.moveX > healthyBoxLayout.x &&
-                    gesture.moveX < healthyBoxLayout.x + healthyBoxLayout.width &&
-                    gesture.moveY > healthyBoxLayout.y &&
-                    gesture.moveY < healthyBoxLayout.y + healthyBoxLayout.height;
-
-                const isInManageBox =
-                    gesture.moveX > manageBoxLayout.x &&
-                    gesture.moveX < manageBoxLayout.x + manageBoxLayout.width &&
-                    gesture.moveY > manageBoxLayout.y &&
-                    gesture.moveY < manageBoxLayout.y + manageBoxLayout.height;
-
-                if (isInHealthyBox) {
-                    // Añadir a la caja de emociones sanas
-                    setHealthyBoxEmotions(prev => [...prev, emotion]);
-                    setAvailableEmotions(prev => prev.filter(e => e.id !== emotion.id));
-
-                    // Actualizar puntuación
-                    if (emotion.type === 'sana') {
-                        setScore(prev => prev + 10);
-                        playSuccessAnimation();
-                    } else {
-                        setScore(prev => Math.max(0, prev - 5));
-                    }
-                } else if (isInManageBox) {
-                    // Añadir a la caja de emociones por gestionar
-                    setManageBoxEmotions(prev => [...prev, emotion]);
-                    setAvailableEmotions(prev => prev.filter(e => e.id !== emotion.id));
-
-                    // Actualizar puntuación
-                    if (emotion.type === 'gestionar') {
-                        setScore(prev => prev + 10);
-                        playSuccessAnimation();
-                    } else {
-                        setScore(prev => Math.max(0, prev - 5));
-                    }
-                }
-
-                // Resetear la posición y el estado de arrastre
-                pan.flattenOffset();
-                setCurrentDragEmotion(null);
-
-                // Si no quedan emociones disponibles, completar la actividad
-                if (availableEmotions.length <= 1) {
-                    handleActivityComplete();
-                }
-            },
-        });
-
-        return { pan, panResponder };
-    };
-
-    // Crear panResponders para cada emoción
-    const emotionPanResponders = availableEmotions.reduce((acc, emotion) => {
-        acc[emotion.id] = createPanResponder(emotion);
-        return acc;
-    }, {} as Record<string, { pan: Animated.ValueXY; panResponder: any }>);
-
-    // Animación de éxito cuando se coloca correctamente
     const playSuccessAnimation = () => {
         Animated.sequence([
-            Animated.timing(successAnim, {
-                toValue: 1,
-                duration: 200,
-                useNativeDriver: true,
-            }),
-            Animated.timing(successAnim, {
-                toValue: 0,
-                duration: 200,
-                useNativeDriver: true,
-            }),
+            Animated.timing(successAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+            Animated.timing(successAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
         ]).start();
     };
 
-    // Formatear tiempo restante
     const formatTime = (seconds: number): string => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -268,16 +213,14 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
 
     return (
         <View style={styles.container}>
-            {/* Ocultar contenido principal cuando está completado */}
             {!isCompleted && (
                 <>
-                    {/* Cabecera con tiempo y puntuación */}
+                    {/* Header */}
                     <View style={styles.header}>
                         <View style={styles.timerContainer}>
                             <MaterialIcons name="timer" size={24} color="#4B5563" />
                             <Text style={styles.timerText}>{formatTime(timeRemaining)}</Text>
                         </View>
-
                         <View style={styles.scoreContainer}>
                             <MaterialIcons name="star" size={24} color="#F59E0B" />
                             <Text style={styles.scoreText}>{score}</Text>
@@ -288,28 +231,21 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
                     <View style={styles.instructionsContainer}>
                         <Text style={styles.instructionsTitle}>Caja de Emociones</Text>
                         <Text style={styles.instructionsText}>
-                            Arrastra cada emoción a la caja correspondiente: "Emociones Sanas" o "Emociones por Gestionar".
+                            Toca una emoción para seleccionarla, luego toca la caja donde quieras colocarla.
                         </Text>
                     </View>
 
-                    {/* Contenedor principal de la actividad */}
+                    {/* Contenedor principal */}
                     <View style={styles.activityContainer}>
-                        {/* Caja de emociones sanas */}
-                        <Animated.View
-                            ref={healthyBoxRef}
+                        {/* Caja emociones sanas */}
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            onPress={() => handleBoxTap('sana')}
                             style={[
                                 styles.emotionBox,
                                 styles.healthyBox,
-                                {
-                                    transform: [
-                                        { scale: currentDragEmotion ? boxPulseAnim : 1 },
-                                    ],
-                                },
+                                selectedEmotion && { borderColor: '#047857', borderWidth: 3 },
                             ]}
-                            onLayout={(event) => {
-                                const { x, y, width, height } = event.nativeEvent.layout;
-                                setHealthyBoxLayout({ x, y, width, height });
-                            }}
                         >
                             <Text style={styles.boxTitle}>Emociones Sanas</Text>
                             <View style={styles.boxContent}>
@@ -318,25 +254,21 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
                                         <EmotionBadge emotion={emotion.name} size="small" />
                                     </View>
                                 ))}
+                                {healthyBoxEmotions.length === 0 && selectedEmotion && (
+                                    <Text style={styles.boxHint}>Toca aquí para colocar</Text>
+                                )}
                             </View>
-                        </Animated.View>
+                        </TouchableOpacity>
 
-                        {/* Caja de emociones por gestionar */}
-                        <Animated.View
-                            ref={manageBoxRef}
+                        {/* Caja emociones por gestionar */}
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            onPress={() => handleBoxTap('gestionar')}
                             style={[
                                 styles.emotionBox,
                                 styles.manageBox,
-                                {
-                                    transform: [
-                                        { scale: currentDragEmotion ? boxPulseAnim : 1 },
-                                    ],
-                                },
+                                selectedEmotion && { borderColor: '#B91C1C', borderWidth: 3 },
                             ]}
-                            onLayout={(event) => {
-                                const { x, y, width, height } = event.nativeEvent.layout;
-                                setManageBoxLayout({ x, y, width, height });
-                            }}
                         >
                             <Text style={styles.boxTitle}>Emociones por Gestionar</Text>
                             <View style={styles.boxContent}>
@@ -345,35 +277,42 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
                                         <EmotionBadge emotion={emotion.name} size="small" />
                                     </View>
                                 ))}
+                                {manageBoxEmotions.length === 0 && selectedEmotion && (
+                                    <Text style={styles.boxHint}>Toca aquí para colocar</Text>
+                                )}
                             </View>
-                        </Animated.View>
+                        </TouchableOpacity>
                     </View>
 
-                    {/* Emociones disponibles para arrastrar */}
+                    {/* Emociones disponibles */}
                     <View style={styles.emotionsContainer}>
                         {availableEmotions.map((emotion) => {
-                            const { pan, panResponder } = emotionPanResponders[emotion.id];
-
+                            const isSelected = selectedEmotion?.id === emotion.id;
                             return (
-                                <Animated.View
+                                <TouchableOpacity
                                     key={emotion.id}
-                                    style={{
-                                        transform: [{ translateX: pan.x }, { translateY: pan.y }],
-                                        zIndex: currentDragEmotion?.id === emotion.id ? 10 : 1,
-                                    }}
-                                    {...panResponder.panHandlers}
+                                    activeOpacity={0.7}
+                                    onPress={() => handleEmotionTap(emotion)}
+                                    style={[
+                                        styles.emotionItem,
+                                        isSelected && styles.emotionItemSelected,
+                                    ]}
                                 >
-                                    <View style={styles.emotionItem}>
-                                        <EmotionBadge emotion={emotion.name} />
-                                    </View>
-                                </Animated.View>
+                                    <EmotionBadge emotion={emotion.name} />
+                                </TouchableOpacity>
                             );
                         })}
                     </View>
+
+                    {selectedEmotion && (
+                        <Text style={styles.selectionHint}>
+                            Seleccionaste: {selectedEmotion.name}. Toca una caja para colocarla.
+                        </Text>
+                    )}
                 </>
             )}
 
-            {/* Pantalla de resultados cuando se completa */}
+            {/* Resultados */}
             {isCompleted && (
                 <View style={styles.resultsOverlay}>
                     <View style={styles.resultsCard}>
@@ -383,13 +322,7 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
                         <Text style={styles.resultsTime}>
                             Tiempo: {formatTime(timeLimit - timeRemaining)}
                         </Text>
-
-                        <TouchableOpacity
-                            style={styles.resultsButton}
-                            onPress={() => {
-                                // Reiniciar la actividad o navegar a otra pantalla
-                            }}
-                        >
+                        <TouchableOpacity style={styles.resultsButton} onPress={() => {}}>
                             <Text style={styles.resultsButtonText}>Continuar</Text>
                         </TouchableOpacity>
                     </View>
@@ -497,6 +430,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'flex-start',
     },
+    boxHint: {
+        color: '#6B7280',
+        fontSize: 12,
+        fontStyle: 'italic',
+        textAlign: 'center',
+        marginTop: 20,
+    },
     emotionsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -515,18 +455,22 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 4,
     },
+    emotionItemSelected: {
+        borderWidth: 3,
+        borderColor: '#3B82F6',
+        backgroundColor: '#EFF6FF',
+        transform: [{ scale: 1.1 }],
+    },
     placedEmotion: {
         margin: 4,
     },
-    resultsContainer: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(255, 255, 255, 0.98)',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        zIndex: 100,
-        paddingHorizontal: 20,
-        paddingTop: 60,
-        paddingBottom: 40,
+    selectionHint: {
+        textAlign: 'center',
+        color: '#3B82F6',
+        fontSize: 14,
+        fontWeight: '500',
+        marginTop: 12,
+        fontStyle: 'italic',
     },
     resultsOverlay: {
         ...StyleSheet.absoluteFillObject,
@@ -580,16 +524,6 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 18,
         fontWeight: 'bold',
-    },
-    successAnimation: {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        marginLeft: -50,
-        marginTop: -50,
-        zIndex: 50,
-        justifyContent: 'center',
-        alignItems: 'center',
     },
 });
 

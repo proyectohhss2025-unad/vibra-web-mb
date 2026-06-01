@@ -227,4 +227,20 @@ export const RankingApi = {
             .then(res => res.data),
 };
 
+/**
+ * Service for handling tests (initial/final)
+ * @namespace TestsApi
+ */
+export const TestsApi = {
+    /**
+     * Obtiene tests pendientes por tipo (initial/final) para un usuario
+     * @param {'initial' | 'final'} type - Tipo de test
+     * @param {string} userId - ID del usuario
+     */
+    getPendingByType: (type: 'initial' | 'final', userId: string) =>
+        api.get<{ data: any[]; total: number }>('/api/tests/pending-by-type', {
+            params: { type, userId }
+        }).then(res => res.data),
+};
+
 export default api;
