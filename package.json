@@ -8,6 +8,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "generate:icons": "node scripts/generate-icons.mjs",
     "prebuild:check": "npx expo-doctor && npx expo config --type public",
     "build:android": "npx expo-doctor && eas build --platform android",
     "build:ios": "npx expo-doctor && eas build --platform ios"
@@ -31,7 +32,7 @@
     "axios": "^1.7.9",
     "click-to-react-component": "^1.1.2",
     "expo": "~56.0.8",
-    "expo-av": "~15.0.2",
+    "expo-av": "^15.1.7",
     "expo-constants": "~56.0.16",
     "expo-device": "~56.0.4",
     "expo-document-picker": "~56.0.4",
@@ -90,8 +91,12 @@
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.1.2",
     "postcss": "^8.5.3",
+    "sharp": "^0.33.5",
     "tailwindcss": "^3.4.17",
     "typescript": "~6.0.3"
+  },
+  "engines": {
+    "node": ">=22.22.3 <23"
   },
   "private": true
 }

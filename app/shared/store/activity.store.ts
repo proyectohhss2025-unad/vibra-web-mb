@@ -16,6 +16,8 @@ interface ActivityState {
     activityType: ActivityType;
     games: GameEntry[];           // Juegos dinámicos desde la actividad
     gameIndex: number;            // Índice actual en el array de juegos
+    totalQuestions: number;       // Total de preguntas a responder
+    allQuestionsAnswered: boolean; // Indica si todas las preguntas fueron respondidas
     actions: {
         initialize: (steps: number) => void;
         setGames: (games: GameEntry[]) => void;
@@ -26,6 +28,8 @@ interface ActivityState {
         setActivityType: (type: ActivityType) => void;
         nextActivityType: () => void;
         isLastGame: () => boolean;
+        setTotalQuestions: (count: number) => void;
+        checkAllQuestionsAnswered: () => void;
     };
 }
 
@@ -37,12 +41,14 @@ const useActivityStore = create<ActivityState>()((set) => ({
     activityType: 'Question',
     games: [],
     gameIndex: 0,
+    totalQuestions: 0,
+    allQuestionsAnswered: false,
     actions: {
-        initialize: (steps: number) => set({ currentStep: 0, responses: new Array(steps) }),
+        initialize: (steps: number) => set({ currentStep: 0, responses: new Array(steps), totalQuestions: steps, allQuestionsAnswered: false }),
         setGames: (games: GameEntry[]) => set({
             games,
             gameIndex: 0,
-            activityType: games.length > 0 ? games[0].type : 'Question',
+            // Mantener activityType como 'Question' (las preguntas van primero)
         }),
         nextStep: () => set((state) => ({
             currentStep: state.currentStep + 1
@@ -52,27 +58,39 @@ const useActivityStore = create<ActivityState>()((set) => ({
         })),
         addResponse: (response: any) => set((state) => {
             const existingResponseIndex = state.responses.findIndex(r => r.questionId === response.questionId);
+            let updatedResponses: Record<string, any>[];
             if (existingResponseIndex >= 0) {
-                const updatedResponses = [...state.responses];
+                updatedResponses = [...state.responses];
                 updatedResponses[existingResponseIndex] = response;
-                return { responses: updatedResponses };
             } else {
-                return { responses: [...state.responses, response] };
+                updatedResponses = [...state.responses, response];
             }
+            // Verificar si todas las preguntas están respondidas
+            const answeredCount = updatedResponses.filter(r => r && r.questionId).length;
+            const allDone = state.totalQuestions > 0 && answeredCount >= state.totalQuestions;
+            return { responses: updatedResponses, allQuestionsAnswered: allDone };
         }),
         reset: () => set((state) => ({
             currentStep: 0,
             responses: [],
             mediaStatus: 'loading',
             startTime: Date.now(),
-            activityType: state.games.length > 0 ? state.games[0]?.type || 'Question' : 'Question',
-            games: state.games,          // Preservar juegos cargados desde BD
-            gameIndex: 0,                // Reiniciar al primer juego
+            activityType: 'Question',     // Siempre empezar por preguntas
+            games: state.games,           // Preservar juegos cargados desde BD
+            gameIndex: 0,                 // Reiniciar al primer juego
+            totalQuestions: state.totalQuestions,
+            allQuestionsAnswered: false,
         })),
         setActivityType: (type: ActivityType) => set({ activityType: type }),
         nextActivityType: () => set((state) => {
             // Secuencia dinámica desde BD (actividades con games configurados)
             if (state.games.length > 0) {
+                // Si activityType es 'Question', ir al primer juego (gameIndex 0)
+                if (state.activityType === 'Question') {
+                    const firstGame = state.games[0];
+                    return { activityType: firstGame.type, gameIndex: 0, currentStep: 0 };
+                }
+                // Si ya estamos en un juego, avanzar al siguiente
                 const nextIndex = state.gameIndex + 1;
                 if (nextIndex < state.games.length) {
                     const nextGame = state.games[nextIndex];
@@ -96,6 +114,14 @@ const useActivityStore = create<ActivityState>()((set) => ({
             }
             return state.activityType === 'DiceGame';
         },
+        setTotalQuestions: (count: number) => set({ totalQuestions: count, allQuestionsAnswered: false }),
+        checkAllQuestionsAnswered: () => set((state) => {
+            // Si no hay preguntas, no se considera completado (esperar a que carguen)
+            if (state.totalQuestions === 0) return { allQuestionsAnswered: false };
+            // Contar respuestas no vacías
+            const answeredCount = state.responses.filter(r => r && r.questionId).length;
+            return { allQuestionsAnswered: answeredCount >= state.totalQuestions };
+        }),
     },
 }));
 

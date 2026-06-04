@@ -1,24 +1,57 @@
 
 /**
- * Formats a phone number string into the standard (XXX) XXX-XXXX format.
+ * Formats a phone number into Colombian format +57 (XXX) XXX-XXXX.
  *
- * This function takes a phone number string as input, removes any non-digit characters, 
- * and then formats it with parentheses and hyphens.
- * 
- * @param {string} phoneNumber - The phone number string to format.
- * @returns {string} - The formatted phone number string in (XXX) XXX-XXXX format.
- * 
+ * Cleans non-digits, strips leading "57" if present (legacy data with country code),
+ * and formats the 10-digit Colombian number.
+ *
+ * @param {string} phoneNumber - Raw phone number string (digits or masked).
+ * @returns {string} - Formatted as "+57 (XXX) XXX-XXXX" or partial while typing.
+ *
  * @example
- * maskFormatPhoneNumber('1234567890'); // returns '(123) 456-7890'
- * maskFormatPhoneNumber('(123) 456-7890'); // returns '(123) 456-7890'
- * maskFormatPhoneNumber('123-456-7890'); // returns '(123) 456-7890'
+ * maskFormatPhoneNumber('3001234567');      // returns '+57 (300) 123-4567'
+ * maskFormatPhoneNumber('573001234567');    // returns '+57 (300) 123-4567'
+ * maskFormatPhoneNumber('300');             // returns '+57 (300'
+ * maskFormatPhoneNumber('');                // returns '+57 ('
  */
 export const maskFormatPhoneNumber = (phoneNumber: string): string => {
-    const cleanedNumber = phoneNumber.replace(/\D/g, '');
-    const formattedNumber = `(${cleanedNumber.slice(0, 3)})-${cleanedNumber.slice(3, 6)}-${cleanedNumber.slice(6, 10)}`;
+    let cleaned = phoneNumber.replace(/\D/g, '');
 
-    return formattedNumber;
-}
+    if (cleaned.length === 0) return '+57 (';
+
+    // Si empieza con "57" y tiene más de 10 dígitos, eliminar el prefijo
+    // (compatible con datos legacy que incluyen código de país)
+    if (cleaned.startsWith('57') && cleaned.length > 10) {
+        cleaned = cleaned.slice(2);
+    }
+
+    const prefix = '+57 (';
+    const digits = cleaned.slice(0, 10);
+
+    if (digits.length <= 3) {
+        return `${prefix}${digits}`;
+    }
+
+    if (digits.length <= 6) {
+        return `${prefix}${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    }
+
+    return `${prefix}${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+};
+
+/**
+ * Strips all non-digit characters from a phone number, returning only digits.
+ * Useful for sending normalized data to the API.
+ *
+ * @param {string} phoneNumber - The phone number string (masked or raw).
+ * @returns {string} - Only digits, e.g. "573001234567".
+ *
+ * @example
+ * unmaskPhoneNumber('+57 (300) 123-4567'); // returns '573001234567'
+ */
+export const unmaskPhoneNumber = (phoneNumber: string): string => {
+    return phoneNumber.replace(/\D/g, '');
+};
 
 /**
  * Formats a string and converts it to a number.

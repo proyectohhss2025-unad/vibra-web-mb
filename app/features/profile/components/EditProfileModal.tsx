@@ -20,6 +20,7 @@ import usePasswordStrength from '@shared/hooks/usePasswordStrength';
 import api from '@shared/services/api/api';
 import useAuthContext from '@/context/AuthContext';
 import useParticipant from '@/context/ParticipantContext';
+import { maskFormatPhoneNumber, unmaskPhoneNumber } from '@shared/utils/number';
 
 interface EditProfileModalProps {
   visible: boolean;
@@ -61,7 +62,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const initFields = useCallback(() => {
     if (participant && user) {
       setName(user.name || '');
-      setPhoneNumber(user.phoneNumber || '');
+      setPhoneNumber(maskFormatPhoneNumber(user.phoneNumber || ''));
       setBirthDate(
         user.birthDate
           ? new Date(user.birthDate).toISOString().split('T')[0]
@@ -84,7 +85,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         await api.post('/api/users', {
           _id: user._id || user.sub,
           name,
-          phoneNumber,
+          phoneNumber: unmaskPhoneNumber(phoneNumber),
           birthDate: birthDate ? new Date(birthDate).toISOString() : undefined,
           gender,
         });
@@ -238,9 +239,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   <View style={styles.field}>
                     <Text style={styles.label}>Teléfono</Text>
                     <TamaguiInput
-                      placeholder="Teléfono"
+                      placeholder="+57 (300) 123-4567"
                       value={phoneNumber}
-                      onChangeText={setPhoneNumber}
+                      onChangeText={(t) => setPhoneNumber(maskFormatPhoneNumber(t))}
                       keyboardType="phone-pad"
                     />
                   </View>

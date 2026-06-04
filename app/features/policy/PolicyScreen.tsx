@@ -56,8 +56,12 @@ const PolicyScreen = () => {
         }
         setPoliciesAccepted(true);
         try {
+            // Obtener userId real del usuario autenticado
+            const storedUser = getSafeKeyObjectFromStorage('user') || {};
+            const userId = storedUser?._id || storedUser?.sub || '';
+
             const resSendApprovedPolicies = await api.post('/api/policies/accept-multiple', {
-                userId: '67c21ed4f905699888106f03',
+                userId,
                 policyIds: policies.map((policy: any) => policy._id),
             });
 

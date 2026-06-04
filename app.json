@@ -14,13 +14,18 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./app/assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#FF6B35"
       },
       "package": "com.anonymous.Vibra"
     },
     "web": {
       "bundler": "metro",
       "favicon": "./app/assets/favicon.png"
+    },
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "backgroundColor": "#FF6B35",
+      "resizeMode": "contain"
     },
     "plugins": [
       [
@@ -47,8 +52,12 @@
           "supportsBackgroundPlayback": true,
           "supportsPictureInPicture": true
         }
-      ]
+      ],
+      "./plugins/withFirebaseManifestFix"
     ],
+    "experiments": {
+      "newArchEnabled": true
+    },
     "extra": {
       "router": {
         "origin": "https://app.vibraunad.com.co",

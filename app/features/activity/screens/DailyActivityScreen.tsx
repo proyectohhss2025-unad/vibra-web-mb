@@ -46,7 +46,7 @@ const DailyActivityScreen = () => {
     const { participant, updateAfterActivity } = useParticipant();
     const { data, isLoading, error, refetch } = useDailyActivity();
     const { mutate } = useSubmitResponse();
-    const { currentStep, responses, activityType, games: storeGames, gameIndex, actions } = useActivityStore();
+    const { currentStep, responses, activityType, games: storeGames, gameIndex, actions, totalQuestions, allQuestionsAnswered } = useActivityStore();
     const currentGame = storeGames[gameIndex];
     const scoreTracker = useScoreTracker(data?.activity);
     const [showSummaryModal, setShowSummaryModal] = useState(false);
@@ -77,7 +77,20 @@ const DailyActivityScreen = () => {
     const startTime = 60;
     const [timeLeft, setTimeLeft] = useState(startTime);
     const currentScore = calculateScore(responses as any);
-    const maxScore = calculateMaxScore(data?.activity?.questions?.length || 0);
+    const questionsCount = data?.activity?.questions?.length || 0;
+    const maxScore = calculateMaxScore(questionsCount);
+
+    // Establecer total de preguntas cuando se cargan los datos de la actividad
+    useEffect(() => {
+        if (questionsCount > 0) {
+            actions.setTotalQuestions(questionsCount);
+        }
+    }, [questionsCount]);
+
+    // Verificar si todas las preguntas están respondidas cuando cambian las respuestas
+    useEffect(() => {
+        actions.checkAllQuestionsAnswered();
+    }, [responses]);
     const [animate, setAnimate] = useState(false);
     const animation = useRef(new Animated.Value(0)).current;
     const [showTransition, setShowTransition] = useState(false);
@@ -322,7 +335,43 @@ const DailyActivityScreen = () => {
 
                 {/* Card de transición FIJO en la parte inferior (oculto cuando se muestra el resumen) */}
                 {!showSummaryModal && <View style={styles.fixedBottomCard}>
-                    {!isLastGame && (
+                    {/* Durante la fase de preguntas: mostrar progreso */}
+                    {activityType === 'Question' && !allQuestionsAnswered && totalQuestions > 0 && (
+                        <View style={tailwind('flex items-center justify-center py-3 px-4')}>
+                            <Text style={tailwind('text-center mb-1 text-gray-700 text-base font-medium')}>
+                                Respondiendo preguntas...
+                            </Text>
+                            <Text style={tailwind('text-center text-sm text-gray-500')}>
+                                {responses.filter(r => r?.questionId).length} / {totalQuestions} respondidas
+                            </Text>
+                            <View style={tailwind('w-full bg-gray-200 rounded-full h-2 mt-2')}>
+                                <View style={[tailwind('bg-blue-500 rounded-full h-2'), {
+                                    width: `${(responses.filter(r => r?.questionId).length / totalQuestions) * 100}%`
+                                }]} />
+                            </View>
+                        </View>
+                    )}
+                    {/* Cargando preguntas o sin datos aún */}
+                    {activityType === 'Question' && totalQuestions === 0 && !allQuestionsAnswered && (
+                        <View style={tailwind('flex items-center justify-center py-3 px-4')}>
+                            <Text style={tailwind('text-center text-gray-500 text-sm')}>Cargando actividad...</Text>
+                        </View>
+                    )}
+                    {/* Cuando las preguntas están completas: ofrecer continuar a juegos */}
+                    {activityType === 'Question' && allQuestionsAnswered && totalQuestions > 0 && !isLastGame && (
+                        <View style={tailwind('flex items-center justify-center py-3 px-4')}>
+                            <Text style={tailwind('text-center mb-2 text-green-700 text-base font-medium')}>¡Todas las preguntas respondidas!</Text>
+                            <TamaguiButton
+                                title={nextGameType ? `Continuar a ${GAME_LABELS[nextGameType] || nextGameType}` : 'Continuar'}
+                                variantColor='blue'
+                                neonEffect={true}
+                                onPress={() => { actions.nextActivityType(); }}
+                                icon="arrow-forward"
+                            />
+                        </View>
+                    )}
+                    {/* Durante los juegos: navegación normal */}
+                    {activityType !== 'Question' && !isLastGame && (
                         <View style={tailwind('flex items-center justify-center py-3 px-4')}>
                             <Text style={tailwind('text-center mb-2 text-gray-700 text-base font-medium')}>¿Listo para la siguiente actividad?</Text>
                             <TamaguiButton
