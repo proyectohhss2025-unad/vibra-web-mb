@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
         fontStyle: 'italic',
     },
     resultsOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: 'rgba(16, 185, 129, 0.95)',
         justifyContent: 'center',
         alignItems: 'center',

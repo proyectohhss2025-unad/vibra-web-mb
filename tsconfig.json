@@ -16,6 +16,7 @@
     "isolatedModules": true,
     "moduleResolution": "bundler",
     "noFallthroughCasesInSwitch": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   }

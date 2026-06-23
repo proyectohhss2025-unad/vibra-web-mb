@@ -39,7 +39,7 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({ questions, onSubmit, 
         setTimeSpent(elapsedTime);
 
         // Calcular puntuación basada en respuestas correctas
-        const totalScore = responses.reduce((total, response) => {
+        const totalScore = responses.reduce((total: number, response: any) => {
             return total + (response.points || 0);
         }, 0);
         setScore(totalScore);
@@ -168,7 +168,7 @@ const QuestionSection: React.FC<QuestionSectionProps> = ({ questions, onSubmit, 
                         Tiempo: {formatTime(timeSpent)}
                     </Text>
                     <Text style={styles.resultsCorrect}>
-                        Respuestas correctas: {responses.filter(r => r.isCorrect).length} de {responses.length}
+                        Respuestas correctas: {responses.filter((r: any) => r.isCorrect).length} de {responses.length}
                     </Text>
                 </View>
             )}
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     },
     // Estilos para el modal de resultados
     resultsOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: 'rgba(16, 185, 129, 0.95)',
         justifyContent: 'center',
         alignItems: 'center',

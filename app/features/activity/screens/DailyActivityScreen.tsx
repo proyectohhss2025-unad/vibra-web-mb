@@ -1,9 +1,9 @@
 import useUser from '@/context/UserContext';
 import useParticipant from '@/context/ParticipantContext';
-import useActivityStore from '@/shared/store/activity.store';
+import useActivityStore, { type ActivityType } from '@/shared/store/activity.store';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Platform, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import ErrorScreen from '../../../shared/components/common/ErrorScreen';
 import NoActivityState from '../../../shared/components/common/NoActivityState';
@@ -21,6 +21,7 @@ import ActivityCompleteSummary from '../components/ActivityCompleteSummary';
 import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
 import { ActivityService } from '@/shared/services/api/api';
+import { MaterialIcons } from '@expo/vector-icons';
 import EmotionBoxScreen from './EmotionBoxScreen';
 import DiceGameActivity from '../components/DiceGameActivity';
 import DiceGameScreen from './DiceGameScreen';
@@ -46,6 +47,27 @@ const DailyActivityScreen = () => {
     const { participant, updateAfterActivity } = useParticipant();
     const { data, isLoading, error, refetch } = useDailyActivity();
     const { mutate } = useSubmitResponse();
+    const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+    const [completedScore, setCompletedScore] = useState(0);
+
+    // Verificar si el usuario ya completó esta actividad
+    useEffect(() => {
+        const checkCompletion = async () => {
+            if (!data?.activity?._id) return;
+            const userId = await getUserId();
+            if (!userId) return;
+            try {
+                const result = await ActivityService.checkActivityResponse(data.activity._id, userId);
+                if (result?.alreadyResponded) {
+                    setAlreadyCompleted(true);
+                    setCompletedScore(result.score || 0);
+                }
+            } catch (err) {
+                console.log('Error checking activity completion:', err);
+            }
+        };
+        checkCompletion();
+    }, [data?.activity?._id]);
     const { currentStep, responses, activityType, games: storeGames, gameIndex, actions, totalQuestions, allQuestionsAnswered } = useActivityStore();
     const currentGame = storeGames[gameIndex];
     const scoreTracker = useScoreTracker(data?.activity);
@@ -232,6 +254,34 @@ const DailyActivityScreen = () => {
 
     if (!data || !data.activity) return <NoActivityState variant="fullscreen" onGoBack={() => router.back()} onCheckAgain={() => refetch()} />;
 
+    // Si ya completó la actividad, mostrar resumen en lugar del contenido
+    if (alreadyCompleted) {
+        return (
+            <SafeAreaView style={tailwind("flex-1 bg-gray-50 w-full")}>
+                <View style={tailwind("flex-1 justify-center items-center px-6")}>
+                    <MaterialIcons name="check-circle" size={80} color="#16a34a" />
+                    <Text style={tailwind("text-2xl font-bold text-gray-800 mt-4")}>Actividad completada</Text>
+                    <Text style={tailwind("text-base text-gray-500 mt-2 text-center")}>
+                        Ya realizaste esta actividad anteriormente.
+                    </Text>
+                    {completedScore > 0 && (
+                        <View style={tailwind("mt-4 bg-green-50 rounded-xl px-6 py-3")}>
+                            <Text style={tailwind("text-lg font-semibold text-green-700")}>
+                                Puntaje obtenido: {completedScore} pts
+                            </Text>
+                        </View>
+                    )}
+                    <TouchableOpacity
+                        style={tailwind("mt-6 bg-blue-500 rounded-lg py-3 px-8")}
+                        onPress={() => router.back()}
+                    >
+                        <Text style={tailwind("text-white font-semibold text-base")}>Volver</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={tailwind("flex-1 bg-gray-50 w-full")}>
             {/* Contenedor principal con distribución flex */}
@@ -342,11 +392,11 @@ const DailyActivityScreen = () => {
                                 Respondiendo preguntas...
                             </Text>
                             <Text style={tailwind('text-center text-sm text-gray-500')}>
-                                {responses.filter(r => r?.questionId).length} / {totalQuestions} respondidas
+                                {responses.filter((r: any) => r?.questionId).length} / {totalQuestions} respondidas
                             </Text>
                             <View style={tailwind('w-full bg-gray-200 rounded-full h-2 mt-2')}>
                                 <View style={[tailwind('bg-blue-500 rounded-full h-2'), {
-                                    width: `${(responses.filter(r => r?.questionId).length / totalQuestions) * 100}%`
+                                    width: `${(responses.filter((r: any) => r?.questionId).length / totalQuestions) * 100}%`
                                 }]} />
                             </View>
                         </View>

@@ -1,3 +1,4 @@
+import './shared/i18n/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
 import { router, Slot } from "expo-router";
@@ -25,7 +26,7 @@ function useNotificationObserver() {
 
     function redirect(notification: Notifications.Notification) {
       const url = notification.request.content.data?.url;
-      if (url) {
+      if (typeof url === 'string') {
         router.push(url);
       }
     }
@@ -65,6 +66,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      {/* @ts-expect-error — TailwindProvider types don't include children in this version */}
       <TailwindProvider utilities={utilities}>
         <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
         <UserProvider>

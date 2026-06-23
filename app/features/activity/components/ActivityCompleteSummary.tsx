@@ -59,18 +59,15 @@ const ActivityCompleteSummary: React.FC<ActivityCompleteSummaryProps> = ({
             {gamesStatus.map((game, i) => (
               <View
                 key={i}
-                style={tailwind(
-                  'flex-row justify-between items-center py-2 px-3 rounded-lg mb-1',
-                  game.completed ? 'bg-green-50' : 'bg-gray-50',
-                )}
+                style={tailwind(`flex-row justify-between items-center py-2 px-3 rounded-lg mb-1 ${game.completed ? 'bg-green-50' : 'bg-gray-50'}`)}
               >
                 <View style={tailwind('flex-row items-center flex-1')}>
                   <Text style={tailwind('mr-2')}>{game.completed ? '✅' : '🔲'}</Text>
-                  <Text style={tailwind('text-sm', game.completed ? 'text-gray-800' : 'text-gray-400')}>
+                  <Text style={tailwind(`text-sm ${game.completed ? 'text-gray-800' : 'text-gray-400'}`)}>
                     {game.name}
                   </Text>
                 </View>
-                <Text style={tailwind('text-sm font-medium', game.completed ? 'text-green-700' : 'text-gray-400')}>
+                <Text style={tailwind(`text-sm font-medium ${game.completed ? 'text-green-700' : 'text-gray-400'}`)}>
                   {game.earnedPoints}/{game.maxPoints} pts
                 </Text>
               </View>

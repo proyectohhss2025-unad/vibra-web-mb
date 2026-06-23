@@ -2,6 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useTranslation } from 'react-i18next';
 import React, { useEffect, useState } from 'react';
 import { Image, Modal, Platform, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
@@ -17,6 +18,7 @@ const mainLogo = require('../../assets/logo-vibra.png');
 
 
 const LoginForm: React.FC = () => {
+    const { t } = useTranslation();
     const keepSessionActive = async () => Platform.OS == "web"
         ? JSON.parse(getSafeKeyObjectFromStorage('keepSessionActive'))
         : await AsyncStorage.getItem("keepSessionActive");
@@ -78,10 +80,10 @@ const LoginForm: React.FC = () => {
 
             if (response) {
                 setModalVisible(false);
-                showTamaguiAlert(response.message || response.error);
+                showTamaguiAlert('Respuesta', response.message || response.error);
             }
         } catch (error) {
-            showTamaguiAlert('Error de conexión');
+            showTamaguiAlert('Error', 'Error de conexión');
         }
     };
 
@@ -170,7 +172,7 @@ const LoginForm: React.FC = () => {
                 />
                 <TextInput
                     style={[styles.input, tailwind('w-full p-3 border border-gray-300 rounded-md mb-4 my-2 bg-white')]}
-                    placeholder="Password"
+                    placeholder={t('auth.password')}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry

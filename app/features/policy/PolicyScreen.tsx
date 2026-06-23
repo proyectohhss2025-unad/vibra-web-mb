@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, Modal } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
 import { useTailwind } from 'tailwind-rn';
 import { useRouter } from 'expo-router';
@@ -8,6 +9,7 @@ import api from '../../shared/services/api/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PolicyScreen = () => {
+    const { t } = useTranslation();
     const tailwind = useTailwind();
     const router = useRouter();
     const [policiesAccepted, setPoliciesAccepted] = useState(false);
@@ -26,7 +28,7 @@ const PolicyScreen = () => {
                 setPolicies(policyData);
             } catch (err) {
                 setError('Error cargando las políticas de uso');
-                showTamaguiAlert('Error', 'Unable to load policies. Please try again.');
+                showTamaguiAlert(t('common.error'), t('errors.unableToLoadPolicies'));
             } finally {
                 setLoading(false);
             }

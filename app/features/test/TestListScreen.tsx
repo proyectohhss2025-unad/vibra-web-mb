@@ -83,7 +83,7 @@ const TestListScreen = () => {
       setLoading(true);
       setError(false);
       try {
-        const res = await api.get<StatusResponse>(`/api/pretests/status/${userId}`);
+        const res = await api.get<StatusResponse>(`/api/pretests/status/${userId}?type=initial`);
         if (!active) return;
 
         if (res.data.allCompleted || res.data.totalTests === 0) {
@@ -142,7 +142,7 @@ const TestListScreen = () => {
             setError(false);
             const userId = await getUserId();
             if (userId) {
-              api.get<StatusResponse>(`/api/pretests/status/${userId}`)
+              api.get<StatusResponse>(`/api/pretests/status/${userId}?type=initial`)
                 .then(res => {
                   if (res.data.allCompleted || res.data.totalTests === 0) {
                     setShouldRedirect(true);
@@ -187,7 +187,7 @@ const TestListScreen = () => {
           <Text style={tailwind('text-sm text-gray-600')}>
             Progreso: {status.completedTests}/{status.totalTests}
           </Text>
-          <Text style={tailwind('text-sm font-semibold', status.allCompleted ? 'text-green-600' : 'text-blue-600')}>
+          <Text style={tailwind(`text-sm font-semibold ${status.allCompleted ? 'text-green-600' : 'text-blue-600'}`)}>
             {status.allCompleted ? '✅ Completado' : `${status.pendingTests} pendiente${status.pendingTests !== 1 ? 's' : ''}`}
           </Text>
         </View>

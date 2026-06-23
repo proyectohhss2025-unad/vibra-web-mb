@@ -29,10 +29,10 @@ const EmailForm = () => {
             });
 
             if (response) {
-                showTamaguiAlert(response.message || response.error);
+                showTamaguiAlert('Respuesta', response.message || response.error);
             }
         } catch (error) {
-            showTamaguiAlert('Error de conexión');
+            showTamaguiAlert('Error', 'Error de conexión');
         }
     };
 

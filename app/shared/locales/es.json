@@ -1,0 +1,61 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "signOff": "Cerrar sesión",
+    "settings": "Ajustes",
+    "profile": "Perfil",
+    "online": "En línea",
+    "dashboard": "Panel principal"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signInToAccount": "Iniciar sesión en tu cuenta",
+    "signUp": "Registrarse",
+    "emailAddress": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "Olvidé mi contraseña",
+    "sendNewPassword": "Enviar nueva contraseña",
+    "notMember": "¿No eres miembro?"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "accept": "Aceptar",
+    "close": "Cerrar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "search": "Buscar",
+    "yes": "Sí",
+    "no": "No",
+    "loading": "Cargando...",
+    "confirm": "Confirmar",
+    "continue": "Continuar",
+    "retry": "Reintentar",
+    "goBack": "Volver",
+    "send": "Enviar",
+    "error": "Error"
+  },
+  "activity": {
+    "title": "Actividades",
+    "dailyActivity": "Actividad diaria",
+    "history": "Historial",
+    "events": "Eventos",
+    "retos": "Retos",
+    "ePersonal": "E-Personal"
+  },
+  "errors": {
+    "notFound": "No encontrado",
+    "unableToLoadPolicies": "No se pudieron cargar las políticas. Intente de nuevo más tarde.",
+    "somethingWentWrong": "Algo salió mal",
+    "connectionError": "Error de conexión"
+  },
+  "profile": {
+    "myProfile": "Mi perfil",
+    "logout": "Cerrar sesión"
+  },
+  "feedback": {
+    "title": "Feedback",
+    "sendFeedback": "Enviar feedback",
+    "thanks": "¡Gracias por tu sugerencia!"
+  }
+}

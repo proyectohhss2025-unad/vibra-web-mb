@@ -183,7 +183,7 @@ const TestModalScreen = () => {
                     <Text style={{ color: 'white', fontSize: 16 }}>No se encontraron preguntas para este test</Text>
                     <TamaguiButton
                         variantColor="blue"
-                        onPress={() => navigation.goBack()}
+                        onPress={() => navigation.back()}
                         title="Volver"
                     />
                 </View>

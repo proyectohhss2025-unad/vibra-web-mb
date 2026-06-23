@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import useParticipant from '@/context/ParticipantContext';
 import useAuthContext from '@/context/AuthContext';
+import config from '../../../../config/env.json';
 
+const API_BASE = config.development.apiBaseUrl;
 const LEVEL_EMOJIS: Record<string, string> = {
   bronce: '🥉',
   plata: '🥈',
@@ -12,6 +14,18 @@ const LEVEL_EMOJIS: Record<string, string> = {
   diamante: '👑',
 };
 
+/**
+ * Resuelve la URL completa del avatar.
+ */
+function resolveAvatarUrl(avatar: string | undefined | null): string | null {
+  if (!avatar) return null;
+  const isFileId = /^[a-f0-9]{24}$/i.test(avatar);
+  if (isFileId) {
+    return `${API_BASE}/api/users/avatar/stream/${avatar}`;
+  }
+  return `${API_BASE}/avatars/${avatar}`;
+}
+
 interface ProfileHeaderProps {
   onEditPress?: () => void;
 }
@@ -19,11 +33,11 @@ interface ProfileHeaderProps {
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ onEditPress }) => {
   const tailwind = useTailwind();
   const { participant } = useParticipant();
-  const { logout } = useAuthContext();
+  const { user, logout } = useAuthContext();
 
   const displayName = participant?.nickname || 'Participante';
   const levelEmoji = LEVEL_EMOJIS[participant?.level || 'bronce'] || '🥉';
-  const avatarUrl = participant?.avatar;
+  const avatarUrl = useMemo(() => resolveAvatarUrl(user?.avatar || participant?.avatar), [user?.avatar, participant?.avatar]);
 
   const handleLogout = () => {
     logout();

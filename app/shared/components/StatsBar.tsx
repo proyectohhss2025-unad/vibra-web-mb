@@ -11,7 +11,7 @@ interface StatsBarProps {
 
 const statsConfig = [
   { key: 'disponibles', label: 'Disponibles', icon: 'list-alt' as const, color: 'blue' },
-  { key: 'enProgreso', label: 'En Progreso', icon: 'hourglass-half' as const, color: 'yellow' },
+  { key: 'enProgreso', label: 'En Progreso', icon: 'hourglass-empty' as const, color: 'yellow' },
   { key: 'completados', label: 'Completados', icon: 'check-circle' as const, color: 'green' },
 ];
 

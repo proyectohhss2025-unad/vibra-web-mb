@@ -29,6 +29,8 @@ interface ActivityCardProps {
   activity: Activity;
   onParticipate: () => void;
   accentColor: string;
+  completed?: boolean;
+  completedScore?: number;
 }
 
 const getDifficultyStars = (difficulty: number) => {
@@ -41,11 +43,11 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 };
 
-const ActivityCard = ({ activity, onParticipate, accentColor }: ActivityCardProps) => {
+const ActivityCard = ({ activity, onParticipate, accentColor, completed, completedScore }: ActivityCardProps) => {
   const tailwind = useTailwind();
 
   return (
-    <View style={[tailwind('bg-white rounded-xl p-3 mb-3'), styles.card]}>
+    <View style={[tailwind(`bg-white rounded-xl p-3 mb-3 ${completed ? 'opacity-80' : ''}`), styles.card]}>
       <View style={tailwind('flex-row items-center')}>
         <Text style={tailwind('text-2xl mr-2')}>{activity.emotion?.icono || '🎯'}</Text>
         <View style={tailwind('flex-1')}>
@@ -70,12 +72,21 @@ const ActivityCard = ({ activity, onParticipate, accentColor }: ActivityCardProp
         </Text>
       </View>
 
-      <TouchableOpacity
-        style={[tailwind(`mt-3 ${accentColor} rounded-lg py-2 items-center`)]}
-        onPress={onParticipate}
-      >
-        <Text style={tailwind('text-white font-semibold text-sm')}>Participar</Text>
-      </TouchableOpacity>
+      {completed ? (
+        <View style={tailwind('mt-3 bg-green-100 rounded-lg py-2 items-center flex-row justify-center')}>
+          <MaterialIcons name="check-circle" size={16} color="#16a34a" />
+          <Text style={tailwind('text-green-700 font-semibold text-sm ml-1')}>
+            Completada {completedScore != null ? `· ${completedScore} pts` : ''}
+          </Text>
+        </View>
+      ) : (
+        <TouchableOpacity
+          style={[tailwind(`mt-3 ${accentColor} rounded-lg py-2 items-center`)]}
+          onPress={onParticipate}
+        >
+          <Text style={tailwind('text-white font-semibold text-sm')}>Participar</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

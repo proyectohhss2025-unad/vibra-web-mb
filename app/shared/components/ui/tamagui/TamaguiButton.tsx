@@ -84,7 +84,7 @@ const TamaguiButton: React.FC<TamaguiButtonProps> = ({
   // Elemento icono
   const iconElement = icon ? (
     <MaterialIcons
-      name={icon}
+      name={icon as any}
       size={buttonType === 'iconTop' ? iconSize * 1.5 : iconSize}
       color="white"
     />

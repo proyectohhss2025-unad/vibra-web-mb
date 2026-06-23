@@ -1,27 +1,45 @@
 import useAuthContext from '@/context/AuthContext';
 import useParticipant from '@/context/ParticipantContext';
-import { ScrollView, StyleSheet, View, Text, Platform } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, Platform, Image } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import CardComponent from '../../shared/components/ui/CardComponent';
 import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
 import CardSlider from '../../shared/components/ui/CardSlider';
 import { useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ActivityHistoryList from '../activity/screens/ActivityHistoryList';
 import FloatButton from '@/shared/components/ui/animation/FloatButton';
 import NoActivityState from '@/shared/components/common/NoActivityState';
 import { ActivityService } from '@/shared/services/api/api';
 import api from '@/shared/services/api/api';
+import config from '@config/env.json';
+
+const API_BASE = config.development.apiBaseUrl;
+
+/**
+ * Resuelve la URL completa del avatar para mobile.
+ */
+function getAvatarUrl(avatar: string | undefined | null): string | null {
+  if (!avatar) return null;
+  const isFileId = /^[a-f0-9]{24}$/i.test(avatar);
+  if (isFileId) {
+    return `${API_BASE}/api/users/avatar/stream/${avatar}`;
+  }
+  return `${API_BASE}/avatars/${avatar}`;
+}
 
 export default function TabOne() {
     const tailwind = useTailwind();
-    const { logout } = useAuthContext();
-    const { refreshParticipant } = useParticipant();
+    const { user, logout } = useAuthContext();
+    const { participant, refreshParticipant } = useParticipant();
     const router = useRouter();
     const [historyActivate, setHistoryActivate] = useState(false);
     const [loading, setLoading] = useState(false);
     const [todayStatus, setTodayStatus] = useState<'loading' | 'active' | 'no_activity'>('loading');
+
+    const userAvatarUrl = useMemo(() => getAvatarUrl(user?.avatar), [user?.avatar]);
+    const userName = user?.name || participant?.nickname || 'Participante';
 
     useEffect(() => {
         // Refrescar datos del participante desde API, o crearlo si no existe
@@ -66,6 +84,26 @@ export default function TabOne() {
 
     return (
         <ScrollView style={[styles.scrollView, tailwind('bg-gray-50 p-4')]}>
+
+            {/* ─── Avatar y saludo ─────────────────────────────── */}
+            <View style={tailwind('flex-row items-center mb-4 bg-white rounded-xl p-3 shadow-sm')}>
+                {userAvatarUrl ? (
+                    <Image
+                        source={{ uri: userAvatarUrl }}
+                        style={{ width: 48, height: 48, borderRadius: 24 }}
+                    />
+                ) : (
+                    <View style={tailwind('w-12 h-12 rounded-full bg-indigo-100 items-center justify-center')}>
+                        <Text style={tailwind('text-lg font-bold text-indigo-500')}>
+                            {userName?.slice(0, 2)?.toUpperCase() || 'U'}
+                        </Text>
+                    </View>
+                )}
+                <View style={tailwind('ml-3')}>
+                    <Text style={tailwind('text-base text-gray-500')}>👋 ¡Hola,</Text>
+                    <Text style={tailwind('text-lg font-bold text-gray-800')}>{userName}!</Text>
+                </View>
+            </View>
 
             {todayStatus === 'no_activity' && (
                 <NoActivityState variant="banner" onCheckAgain={handleCheckAgain} />

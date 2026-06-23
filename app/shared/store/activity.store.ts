@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type ActivityType = 'Question' | 'WordSearch' | 'MatchingConcepts' | 'EmotionBox' | 'DiceGame';
+export type ActivityType = 'Question' | 'WordSearch' | 'MatchingConcepts' | 'EmotionBox' | 'DiceGame';
 
 interface GameEntry {
     type: ActivityType;
@@ -107,7 +107,7 @@ const useActivityStore = create<ActivityState>()((set) => ({
             }
             return state;
         }),
-        isLastGame: () => {
+        isLastGame: (): boolean => {
             const state = useActivityStore.getState();
             if (state.games.length > 0) {
                 return state.gameIndex >= state.games.length - 1;

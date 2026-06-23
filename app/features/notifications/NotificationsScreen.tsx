@@ -1,54 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, View, Text, FlatList, Button } from 'react-native';
-import messaging from '@react-native-firebase/messaging';
-
-// Tipo para las notificaciones
-type Notification = {
-    id: string;
-    title: string;
-    message: string;
-    isPush: boolean; // Indica si es una notificación push
-};
+import React from 'react';
+import { View, Text, FlatList, Button } from 'react-native';
+import useNotificationStore from '../../shared/store/notification.store';
 
 const NotificationsScreen = () => {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-
-    // Firebase push notifications listener
-    useEffect(() => {
-        const unsubscribe = messaging().onMessage(async (remoteMessage) => {
-            Alert.alert(
-                remoteMessage.notification?.title ?? 'Notificación Push',
-                remoteMessage.notification?.body,
-            );
-            addNotification({
-                id: remoteMessage.messageId ?? String(Date.now()),
-                title: remoteMessage.notification?.title ?? 'Notificación Push',
-                message: remoteMessage.notification?.body ?? 'Mensaje de notificación',
-                isPush: true,
-            });
-        });
-
-        return () => unsubscribe();
-    }, []);
+    const notifications = useNotificationStore((s) => s.notifications);
+    const addNotification = useNotificationStore((s) => s.addNotification);
 
     // Agregar una notificación interna
     const addInternalNotification = () => {
-        const newNotification: Notification = {
+        addNotification({
             id: String(Date.now()),
             title: 'Notificación Interna',
             message: 'Esta es una notificación generada dentro de la aplicación.',
             isPush: false,
-        };
-        addNotification(newNotification);
-    };
-
-    // Agregar una notificación a la lista
-    const addNotification = (notification: Notification) => {
-        setNotifications((prev) => [notification, ...prev]);
+        });
     };
 
     // Renderizar una notificación
-    const renderNotification = ({ item }: { item: Notification }) => (
+    const renderNotification = ({ item }: { item: { id: string; title: string; message: string; isPush: boolean } }) => (
         <View style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
             <Text style={{ fontWeight: 'bold' }}>{item.title}</Text>
             <Text>{item.message}</Text>

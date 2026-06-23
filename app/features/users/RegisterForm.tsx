@@ -26,11 +26,11 @@ const RegisterForm = () => {
     const [hightSchool, setHightSchool] = useState('');
     const [course, setCourse] = useState('');
 
-    // Options state
-    const [typeDocumentOptions, setTypeDocumentOptions] = useState([]);
-    const [roleOptions, setRoleOptions] = useState([]);
-    const [hightSchoolOptions, setHightSchoolOptions] = useState([]);
-    const [courseOptions, setCourseOptions] = useState([]);
+    // Options state (tipos any porque vienen de API)
+    const [typeDocumentOptions, setTypeDocumentOptions] = useState<any[]>([]);
+    const [roleOptions, setRoleOptions] = useState<any[]>([]);
+    const [hightSchoolOptions, setHightSchoolOptions] = useState<any[]>([]);
+    const [courseOptions, setCourseOptions] = useState<any[]>([]);
 
     // Loading states
     const [loadingForm, setLoadingForm] = useState(false);
@@ -44,6 +44,15 @@ const RegisterForm = () => {
 
     // Validation errors
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Helper: limpia un error del objeto en vez de dejarlo como string vacío
+    const clearError = (field: string) => {
+        if (errors[field]) {
+            const next = { ...errors };
+            delete next[field];
+            setErrors(next);
+        }
+    };
 
     // Get role name for badge
     const getRoleName = () => {
@@ -243,7 +252,7 @@ const RegisterForm = () => {
                                     value={fullName}
                                     onChangeText={(text) => {
                                         setFullName(text);
-                                        if (errors.fullName) setErrors({ ...errors, fullName: '' });
+                                        clearError('fullName');
                                     }}
                                 />
                             </View>
@@ -262,7 +271,7 @@ const RegisterForm = () => {
                                     value={username}
                                     onChangeText={(text) => {
                                         setUsername(text);
-                                        if (errors.username) setErrors({ ...errors, username: '' });
+                                        clearError('username');
                                     }}
                                 />
                             </View>
@@ -282,7 +291,7 @@ const RegisterForm = () => {
                                     value={password}
                                     onChangeText={(text) => {
                                         setPassword(text);
-                                        if (errors.password) setErrors({ ...errors, password: '' });
+                                        clearError('password');
                                     }}
                                 />
                             </View>
@@ -299,7 +308,7 @@ const RegisterForm = () => {
                                     style={styles.picker}
                                     onValueChange={(itemValue) => {
                                         setTypeDocument(itemValue);
-                                        if (errors.typeDocument) setErrors({ ...errors, typeDocument: '' });
+                                        clearError('typeDocument');
                                     }}
                                     dropdownIconColor="#0066FF"
                                 >
@@ -324,7 +333,7 @@ const RegisterForm = () => {
                                     value={documentNumber}
                                     onChangeText={(text) => {
                                         setDocumentNumber(text);
-                                        if (errors.documentNumber) setErrors({ ...errors, documentNumber: '' });
+                                        clearError('documentNumber');
                                     }}
                                 />
                             </View>
@@ -345,7 +354,7 @@ const RegisterForm = () => {
                                     value={email}
                                     onChangeText={(text) => {
                                         setEmail(text);
-                                        if (errors.email) setErrors({ ...errors, email: '' });
+                                        clearError('email');
                                     }}
                                 />
                             </View>
@@ -362,7 +371,7 @@ const RegisterForm = () => {
                                     style={styles.picker}
                                     onValueChange={(itemValue) => {
                                         setRole(itemValue);
-                                        if (errors.role) setErrors({ ...errors, role: '' });
+                                        clearError('role');
                                     }}
                                     dropdownIconColor="#0066FF"
                                 >
@@ -385,7 +394,7 @@ const RegisterForm = () => {
                                     onValueChange={(itemValue) => {
                                         setHightSchool(itemValue);
                                         setCourse('');
-                                        if (errors.hightSchool) setErrors({ ...errors, hightSchool: '' });
+                                        clearError('hightSchool');
                                     }}
                                     dropdownIconColor="#0066FF"
                                 >
@@ -398,7 +407,7 @@ const RegisterForm = () => {
                         </View>
 
                         {/* Course - only show if hightSchool is selected */}
-                        {hightSchool && (
+                        {!!hightSchool && (
                             <View style={styles.inputGroup}>
                                 <Text style={styles.label}>Curso</Text>
                                 <View style={[styles.inputWrapper, errors.course && styles.inputError]}>
@@ -408,7 +417,7 @@ const RegisterForm = () => {
                                         style={styles.picker}
                                         onValueChange={(itemValue) => {
                                             setCourse(itemValue);
-                                            if (errors.course) setErrors({ ...errors, course: '' });
+                                            clearError('course');
                                         }}
                                         dropdownIconColor="#0066FF"
                                     >
@@ -538,7 +547,7 @@ const RegisterForm = () => {
                                     <MaterialIcons name="error" size={80} color="#FF0000" />
                                 )}
                             </View>
-                            <Text style={[styles.modalTitle, resultType === 'success' ? styles.successText : styles.errorText]}>
+                            <Text style={[styles.modalTitle, resultType === 'success' ? styles.successText : styles.resultErrorText]}>
                                 {resultType === 'success' ? '¡Éxito!' : 'Error'}
                             </Text>
                             <Text style={styles.resultMessage}>{resultMessage}</Text>
@@ -734,7 +743,7 @@ const styles = StyleSheet.create({
     successText: {
         color: '#00CC00',
     },
-    errorText: {
+    resultErrorText: {
         color: '#FF0000',
     },
     resultMessage: {

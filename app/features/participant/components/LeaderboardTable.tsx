@@ -85,7 +85,7 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
         {/* Nivel badge */}
         <View style={tailwind('mr-3')}>
-          <Text style={tailwind('text-xs px-2 py-1 rounded-full capitalize', badgeColor)}>
+          <Text style={tailwind(`text-xs px-2 py-1 rounded-full capitalize ${badgeColor || ''}`)}>
             {item.level}
           </Text>
         </View>

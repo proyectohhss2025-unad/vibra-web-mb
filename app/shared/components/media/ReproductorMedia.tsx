@@ -70,7 +70,7 @@ const ReproductorMedia = () => {
                         <VideoView
                             style={styles.media}
                             player={player}
-                            allowsFullscreen
+                            fullscreenOptions={{ enable: true }}
                             allowsPictureInPicture
                         />
                     )}

@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTailwind } from 'tailwind-rn';
@@ -21,13 +22,16 @@ import api from '@shared/services/api/api';
 import useAuthContext from '@/context/AuthContext';
 import useParticipant from '@/context/ParticipantContext';
 import { maskFormatPhoneNumber, unmaskPhoneNumber } from '@shared/utils/number';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system';
 
 interface EditProfileModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
-type TabType = 'datos' | 'seguridad';
+type TabType = 'datos' | 'avatar' | 'seguridad';
 
 const GENDER_OPTIONS = [
   { label: 'Masculino', value: 'MALE' },
@@ -88,14 +92,13 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           phoneNumber: unmaskPhoneNumber(phoneNumber),
           birthDate: birthDate ? new Date(birthDate).toISOString() : undefined,
           gender,
+          avatar: avatar || undefined,
         });
       }
       if (participant?._id) {
-        await api.post('/api/participants/update', {
-          _id: participant._id,
-          nickname,
-          avatar,
-        });
+        const updatePayload: Record<string, any> = { _id: participant._id, nickname };
+        if (avatar) updatePayload.avatar = avatar;
+        await api.post('/api/participants/update', updatePayload);
       }
       await refreshParticipant();
       showTamaguiAlert('Éxito', 'Datos actualizados correctamente');
@@ -162,6 +165,84 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     onClose();
   };
 
+  // ─── Pick & upload desde cámara/galería ─────────────────────────────
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const pickAndUpload = async (useCamera: boolean) => {
+    try {
+      // Solicitar permisos
+      if (useCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          showTamaguiAlert('Permiso denegado', 'Se necesita acceso a la cámara para tomar una foto.');
+          return;
+        }
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          showTamaguiAlert('Permiso denegado', 'Se necesita acceso a la galería para seleccionar una foto.');
+          return;
+        }
+      }
+
+      // Abrir cámara o galería
+      const launcher = useCamera ? ImagePicker.launchCameraAsync : ImagePicker.launchImageLibraryAsync;
+      const result = await launcher({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+
+      if (result.canceled || !result.assets?.[0]?.uri) return;
+      const uri = result.assets[0].uri;
+
+      setUploadingAvatar(true);
+
+      // Comprimir con expo-image-manipulator
+      const manipulated = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 500 } }],
+        { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG },
+      );
+
+      // Leer archivo comprimido como base64 para FormData
+      const base64 = await FileSystem.readAsStringAsync(manipulated.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Subir al backend
+      const formData = new FormData();
+      formData.append('file', {
+        uri: Platform.OS === 'web' ? manipulated.uri : manipulated.uri,
+        type: 'image/jpeg',
+        name: `avatar-${Date.now()}.jpg`,
+      } as any);
+
+      const res = await api.post('/api/users/avatar/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000,
+      });
+
+      // Usar el fileId real retornado por el backend (GridFS fileId)
+      const uploadedFileId = res.data?.avatar || res.data?.galleryItem?.src || '';
+      showTamaguiAlert(
+        'Éxito',
+        uploadedFileId
+          ? 'Foto de perfil actualizada correctamente'
+          : 'Foto subida correctamente. Guarda los cambios para aplicarla.',
+      );
+      if (uploadedFileId) {
+        setAvatar(uploadedFileId); // fileId real de GridFS
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Error al subir la imagen';
+      showTamaguiAlert('Error', msg);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   return (
     <Modal
       animationType="slide"
@@ -199,7 +280,20 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     activeTab === 'datos' && styles.tabTextActive,
                   ]}
                 >
-                  Datos Personales
+                  Datos
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'avatar' && styles.tabActive]}
+                onPress={() => setActiveTab('avatar')}
+              >
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === 'avatar' && styles.tabTextActive,
+                  ]}
+                >
+                  Avatar
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -298,25 +392,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     />
                   </View>
 
-                  <View style={styles.field}>
-                    <Text style={styles.label}>URL del Avatar</Text>
-                    <TamaguiInput
-                      placeholder="https://..."
-                      value={avatar}
-                      onChangeText={setAvatar}
-                      autoCapitalize="none"
-                      keyboardType="url"
-                    />
-                    {avatar ? (
-                      <View style={styles.avatarPreview}>
-                        <Image
-                          source={{ uri: avatar }}
-                          style={styles.avatarImage}
-                        />
-                      </View>
-                    ) : null}
-                  </View>
-
                   <View style={styles.buttonWrapper}>
                     <TamaguiButton
                       title={saving ? 'Guardando...' : 'Guardar cambios'}
@@ -327,6 +402,68 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                       icon={saving ? 'loading' : 'check'}
                     />
                   </View>
+                </View>
+              )}
+
+              {activeTab === 'avatar' && (
+                <View style={styles.form}>
+                  <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, textAlign: 'center', marginBottom: 12 }}>
+                    Toma una foto o selecciona de la galería
+                  </Text>
+
+                  {/* Botones de cámara y galería */}
+                  <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+                    <TouchableOpacity
+                      onPress={() => pickAndUpload(true)}
+                      disabled={uploadingAvatar}
+                      style={{
+                        flex: 1,
+                        paddingVertical: 14,
+                        borderRadius: 12,
+                        backgroundColor: 'rgba(99,102,241,0.15)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(99,102,241,0.3)',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      <Text style={{ fontSize: 22 }}>📸</Text>
+                      <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>
+                        {uploadingAvatar ? 'Subiendo...' : 'Tomar foto'}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => pickAndUpload(false)}
+                      disabled={uploadingAvatar}
+                      style={{
+                        flex: 1,
+                        paddingVertical: 14,
+                        borderRadius: 12,
+                        backgroundColor: 'rgba(34,197,94,0.15)',
+                        borderWidth: 1,
+                        borderColor: 'rgba(34,197,94,0.3)',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      <Text style={{ fontSize: 22 }}>🖼️</Text>
+                      <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>
+                        {uploadingAvatar ? 'Subiendo...' : 'Galería'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, textAlign: 'center', marginBottom: 12 }}>
+                    O elige de los disponibles:
+                  </Text>
+
+                  <AvatarGalleryGrid
+                    userAvatar={user?.avatar}
+                    onSelect={(url) => {
+                      setAvatar(url);
+                      showTamaguiAlert('Avatar', 'Avatar seleccionado. Guarda los cambios para aplicarlo.');
+                    }}
+                  />
                 </View>
               )}
 
@@ -418,7 +555,6 @@ const PasswordStrengthIndicator = ({ password }: { password: string }) => {
             width: `${strength.barPercent}%`,
             backgroundColor: strength.color,
             borderRadius: 2,
-            transition: 'width 0.3s',
           }}
         />
       </View>
@@ -428,6 +564,129 @@ const PasswordStrengthIndicator = ({ password }: { password: string }) => {
         </Text>
       ) : null}
     </View>
+  );
+};
+
+// ═════════════════════════════════════════════════════════════════════════
+//  Avatar Gallery Grid (embebido)
+// ═════════════════════════════════════════════════════════════════════════
+
+const PRESET_AVATARS = [
+  'default-avatar.svg', '01.svg', '02.svg', '03.jpg', '04.jpg',
+  '05.jpg', '06.jpg', '07.jpg', '08.jpg', '09.jpg',
+];
+
+// URL base desde la instancia axios centralizada (config/env.json)
+const API_BASE = api.defaults.baseURL || 'http://localhost:4000';
+
+interface AvatarGalleryGridProps {
+  userAvatar?: string;
+  onSelect: (url: string) => void;
+}
+
+const AvatarGalleryGrid: React.FC<AvatarGalleryGridProps> = ({ userAvatar, onSelect }) => {
+  const [gallery, setGallery] = useState<{ id: string; type: string; src: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [active, setActive] = useState<string>(userAvatar || '');
+
+  useEffect(() => {
+    const loadGallery = async () => {
+      try {
+        const res = await api.get('/api/users/avatar/gallery');
+        setGallery(res.data?.gallery || []);
+        setActive(res.data?.activeAvatar || userAvatar || '');
+      } catch {
+        // Fallback: mostrar solo presets
+        setGallery(PRESET_AVATARS.map((src) => ({ id: src, type: 'preset', src })));
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadGallery();
+  }, []);
+
+  const getUrl = (item: { type: string; src: string }) => {
+    if (item.type === 'upload') return `${API_BASE}/api/users/avatar/stream/${item.src}`;
+    return `${API_BASE}/avatars/${item.src}`;
+  };
+
+  const presets = gallery.filter((i) => i.type === 'preset');
+  const uploads = gallery.filter((i) => i.type === 'upload');
+
+  if (loading) {
+    return <ActivityIndicator color="#FFFFFF" style={{ marginVertical: 20 }} />;
+  }
+
+  return (
+    <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 280 }}>
+      {/* Prediseñados */}
+      <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: '600', marginBottom: 6, textTransform: 'uppercase' }}>
+        Prediseñados
+      </Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+        {presets.map((item) => {
+          const isActive = item.src === active;
+          return (
+            <TouchableOpacity
+              key={item.id}
+              onPress={() => {
+                setActive(item.src);
+                onSelect(item.src);
+              }}
+              style={{
+                width: 56, height: 56, borderRadius: 28,
+                borderWidth: 2,
+                borderColor: isActive ? '#FBBF24' : 'rgba(255,255,255,0.15)',
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                alignItems: 'center', justifyContent: 'center',
+                overflow: 'hidden',
+              }}
+            >
+              <Image source={{ uri: getUrl(item) }} style={{ width: 48, height: 48, borderRadius: 24 }} />
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Subidas */}
+      {uploads.length > 0 && (
+        <>
+          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: '600', marginBottom: 6, textTransform: 'uppercase' }}>
+            Mis subidas
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {uploads.map((item) => {
+              const isActive = item.src === active;
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  onPress={() => {
+                    setActive(item.src);
+                    onSelect(item.src);
+                  }}
+                  style={{
+                    width: 56, height: 56, borderRadius: 28,
+                    borderWidth: 2,
+                    borderColor: isActive ? '#FBBF24' : 'rgba(255,255,255,0.15)',
+                    backgroundColor: 'rgba(255,255,255,0.08)',
+                    alignItems: 'center', justifyContent: 'center',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Image source={{ uri: getUrl(item) }} style={{ width: 48, height: 48, borderRadius: 24 }} />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </>
+      )}
+
+      {uploads.length === 0 && (
+        <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, textAlign: 'center', marginTop: 8 }}>
+          Sube imágenes desde la web para verlas aquí
+        </Text>
+      )}
+    </ScrollView>
   );
 };
 

@@ -47,7 +47,7 @@ const PersonalEventsDashboard = () => {
     if (Platform.OS === 'web') {
       return getSafeKeyObjectFromStorage('userId');
     }
-    const AsyncStorage = await import('@react-native-async-storage/async-storage');
+    const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
     return AsyncStorage.getItem('userId');
   };
 
@@ -178,7 +178,7 @@ const PersonalEventsDashboard = () => {
           events.map((event) => (
             <ActivityCard
               key={event._id}
-              activity={event}
+              activity={event as any}
               accentColor="bg-purple-500"
               onParticipate={() => {}}
             />

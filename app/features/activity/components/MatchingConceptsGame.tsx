@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
     },
     // Estilos para el modal de resultados
     resultsOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: 'rgba(16, 185, 129, 0.95)',
         justifyContent: 'center',
         alignItems: 'center',

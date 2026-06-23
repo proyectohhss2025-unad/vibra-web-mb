@@ -53,7 +53,13 @@
           "supportsPictureInPicture": true
         }
       ],
-      "./plugins/withFirebaseManifestFix"
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Vibra necesita acceso a tu galería para seleccionar una foto de perfil.",
+          "cameraPermission": "Vibra necesita acceso a tu cámara para tomar una foto de perfil."
+        }
+      ]
     ],
     "experiments": {
       "newArchEnabled": true

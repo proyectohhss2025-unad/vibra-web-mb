@@ -155,7 +155,7 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ resource, onComplete }) => {
                 <VideoView
                     style={styles.media}
                     player={player}
-                    allowsFullscreen
+                    fullscreenOptions={{ enable: true }}
                     allowsPictureInPicture
                 />
             </>

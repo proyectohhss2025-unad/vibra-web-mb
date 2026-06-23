@@ -3,6 +3,7 @@
  * @module services/api
  */
 import ActivityResponse, { PaginatedResponse } from '@/shared/types/api';
+import type { Activity } from '@/shared/types/activity';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { router } from 'expo-router';
@@ -129,6 +130,8 @@ export const ActivityService = {
      */
     getDailyActivity: (): Promise<ActivityResponse> =>
         api.get<ActivityResponse>('/api/activities/daily/current').then(res => res.data),
+    checkActivityResponse: (activityId: string, userId: string): Promise<{ alreadyResponded: boolean; score?: number; respondedAt?: string }> =>
+        api.get(`/api/activities/${activityId}/check-response`, { params: { userId } }).then(res => res.data),
     submitResponse: (activityId: string, userId: string, data: any) =>
         api.post(`/api/activities/${activityId}/${userId}/submit`, {
             params: { id: activityId, userId },

@@ -9,29 +9,15 @@ import LoginScreen from './features/auth/LoginScreen';
 // Import the global.css file in the index.js file:
 import '../global.css';
 import { ActivityService } from './shared/services/api/api';
-//import messaging from '@react-native-firebase/messaging';
-
-// Solicitar permisos para notificaciones (iOS)
-/*messaging()
-  .requestPermission()
-  .then((authStatus: any) => {
-    console.log('Estado de autorización:', authStatus);
-  })
-  .catch((error: any) => {
-    console.log('Error al solicitar permisos:', error);
-  });
-
-// Escuchar notificaciones en segundo plano (Firebase)
-messaging().setBackgroundMessageHandler(async (remoteMessage: any) => {
-  console.log('Notificación en segundo plano:', remoteMessage);
-});*/
+import useNotificationStore from './shared/store/notification.store';
 
 // First, set the handler that will cause the notification
 // to show the alert
 if (Platform.OS !== 'web') {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
-      shouldShowAlert: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
       shouldPlaySound: false,
       shouldSetBadge: false,
     }),
@@ -53,8 +39,8 @@ const Index: React.FC = () => {
   const [notification, setNotification] = useState<Notifications.Notification | undefined>(
     undefined
   );
-  const notificationListener = useRef<Notifications.EventSubscription>();
-  const responseListener = useRef<Notifications.EventSubscription>();
+  const notificationListener = useRef<Notifications.EventSubscription | null>(null);
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
     if (Platform.OS !== 'web') {
@@ -66,6 +52,12 @@ const Index: React.FC = () => {
 
       notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
         setNotification(notification);
+        useNotificationStore.getState().addNotification({
+          id: notification.request.identifier,
+          title: notification.request.content.title ?? 'Notificación Push',
+          message: notification.request.content.body ?? 'Mensaje de notificación',
+          isPush: true,
+        });
       });
 
       responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
@@ -73,10 +65,8 @@ const Index: React.FC = () => {
       });
 
       return () => {
-        notificationListener.current &&
-          Notifications.removeNotificationSubscription(notificationListener.current);
-        responseListener.current &&
-          Notifications.removeNotificationSubscription(responseListener.current);
+        notificationListener.current?.remove();
+        responseListener.current?.remove();
       };
     }
   }, []);

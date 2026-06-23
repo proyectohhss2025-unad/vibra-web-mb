@@ -39,12 +39,13 @@ const ChallengesDashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({ disponibles: 0, enProgreso: 0, completados: 0 });
   const [ranking, setRanking] = useState<RankingItem[]>([]);
+  const [completedMap, setCompletedMap] = useState<Record<string, { completed: boolean; score: number }>>({});
 
   const getUserIdFromStorage = async (): Promise<string | null> => {
     if (Platform.OS === 'web') {
       return getSafeKeyObjectFromStorage('userId');
     }
-    const AsyncStorage = await import('@react-native-async-storage/async-storage');
+    const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
     return AsyncStorage.getItem('userId');
   };
 
@@ -99,6 +100,26 @@ const ChallengesDashboard = () => {
 
   useEffect(() => { loadChallenges(); }, []);
 
+  // Verificar qué retos ya completó el usuario
+  useEffect(() => {
+    const checkCompletions = async () => {
+      if (challenges.length === 0) return;
+      const userId = await getUserIdFromStorage();
+      if (!userId) return;
+      const map: Record<string, { completed: boolean; score: number }> = {};
+      await Promise.all(challenges.map(async (ch) => {
+        try {
+          const result = await ActivityService.checkActivityResponse(ch._id, userId);
+          if (result?.alreadyResponded) {
+            map[ch._id] = { completed: true, score: result.score || 0 };
+          }
+        } catch { /* ignore */ }
+      }));
+      setCompletedMap(map);
+    };
+    checkCompletions();
+  }, [challenges]);
+
   if (loading) {
     return (
       <SafeAreaView style={tailwind('flex-1 bg-gray-50')}>
@@ -149,9 +170,11 @@ const ChallengesDashboard = () => {
           challenges.map((challenge) => (
             <ActivityCard
               key={challenge._id}
-              activity={challenge}
+              activity={challenge as any}
               accentColor="bg-blue-500"
               onParticipate={() => {}}
+              completed={completedMap[challenge._id]?.completed || false}
+              completedScore={completedMap[challenge._id]?.score}
             />
           ))
         )}

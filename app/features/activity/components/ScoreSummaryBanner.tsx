@@ -31,7 +31,7 @@ const ScoreSummaryBanner: React.FC<ScoreSummaryBannerProps> = ({
             {currentScore} / {maxScore} pts
           </Text>
         </View>
-        <Text style={tailwind('text-xs font-semibold', progressPercent >= 80 ? 'text-green-600' : progressPercent >= 50 ? 'text-indigo-600' : 'text-yellow-600')}>
+        <Text style={tailwind(`text-xs font-semibold ${progressPercent >= 80 ? 'text-green-600' : progressPercent >= 50 ? 'text-indigo-600' : 'text-yellow-600'}`)}>
           {progressPercent}%
         </Text>
       </View>

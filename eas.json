@@ -16,6 +16,14 @@
         "buildType": "apk"
       }
     },
+    "debug-apk": {
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "APP_ENV": "qa"
+      }
+    },
     "production": {}
   },
   "submit": {

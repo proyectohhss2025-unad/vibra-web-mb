@@ -54,7 +54,7 @@ const ActivityHistoryList = () => {
         if (Platform.OS === 'web') {
             return getSafeKeyObjectFromStorage('userId');
         } else {
-            const AsyncStorage = await import('@react-native-async-storage/async-storage');
+            const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
             return AsyncStorage.getItem('userId');
         }
     };
@@ -105,17 +105,8 @@ const ActivityHistoryList = () => {
         }
     };
 
-    const handleSearch = (query: string) => {
-        if (!query.trim()) {
-            setFilteredActivities(activities);
-            return;
-        }
-        
-        const filtered = activities.filter(activity => 
-            activity.title?.toLowerCase().includes(query.toLowerCase()) ||
-            activity.emotion?.name?.toLowerCase().includes(query.toLowerCase())
-        );
-        setFilteredActivities(filtered);
+    const handleSearch = (results: Activity[]) => {
+        setFilteredActivities(results);
     };
 
     const getTypeLabel = (type: string) => {
