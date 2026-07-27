@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Image, Dimensions, TextInput } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
-import useActivityStore from '@/shared/store/activity.store';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
+import useActivityStore from '@shared/store/activity.store';
 import { LinearGradient } from 'expo-linear-gradient';
 
 /**

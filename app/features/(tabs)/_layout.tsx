@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
 const mainLogo = require('../../assets/logo-vibra.png');
 const logoUnad = require('../../assets/sponsors/logo_unad.png');
 

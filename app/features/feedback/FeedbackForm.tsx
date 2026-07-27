@@ -3,7 +3,7 @@
  *
  * Muestra un mensaje de éxito/error después del envío usando Alert.
  */
-import api from '@/shared/services/api/api';
+import api from '@shared/services/api/api';
 import React, { useState } from 'react';
 import { Alert, View } from 'react-native';
 import { Button, Text, TextInput, useTheme } from 'react-native-paper';

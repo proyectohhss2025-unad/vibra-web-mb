@@ -7,15 +7,15 @@
  * - Los tests completados se muestran como "Realizado" (no clickeables).
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from '@/shared/services/api/api';
+import api from '@shared/services/api/api';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Platform, StyleSheet, Text, View } from "react-native";
 import { useTailwind } from "tailwind-rn";
-import TamaguiButton from "@/shared/components/ui/tamagui/TamaguiButton";
-import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
-import { getSafeKeyObjectFromStorage } from '@/shared/utils/safe-token-storage';
+import TamaguiButton from "@shared/components/ui/tamagui/TamaguiButton";
+import { showTamaguiAlert } from '@shared/components/ui/tamagui';
+import { getSafeKeyObjectFromStorage } from '@shared/utils/safe-token-storage';
 
 type TestStatusItem = {
   testId: string;

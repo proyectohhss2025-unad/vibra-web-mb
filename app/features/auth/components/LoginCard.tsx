@@ -7,11 +7,11 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Image, Platform, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
-import { getSafeKeyObjectFromStorage } from '@/shared/utils/safe-token-storage';
+import { getSafeKeyObjectFromStorage } from '@shared/utils/safe-token-storage';
 import useAuthContext from '@/context/AuthContext';
-import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
-import TamaguiGlassCard from '@/shared/components/ui/tamagui/TamaguiGlassCard';
+import { showTamaguiAlert } from '@shared/components/ui/tamagui';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
+import TamaguiGlassCard from '@shared/components/ui/tamagui/TamaguiGlassCard';
 
 const mainLogo = require('../../../assets/logo-vibra.png');
 

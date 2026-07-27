@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
-import type { ActivityHistoryEntry } from '../hooks/useProfileData';
+import type { ActivityHistoryEntry } from '../_hooks/useProfileData';
 
 interface ActivityChartProps {
   history: ActivityHistoryEntry[];

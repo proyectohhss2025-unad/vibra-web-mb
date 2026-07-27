@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { FlatList, Image, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ActivityIndicator, List, Surface } from 'react-native-paper';
 import { useTailwind } from 'tailwind-rn';
-import api from '../../shared/services/api/api';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
+import api from '@shared/services/api/api';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
 
 type TestResult = {
     _id: string;

@@ -3,10 +3,10 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTailwind } from 'tailwind-rn';
-import SearchInput from '@/shared/components/ui/SearchInput';
+import SearchInput from '@shared/components/ui/SearchInput';
 import EmotionBadge from '../components/EmotionBadge';
-import { ActivityService } from '@/shared/services/api/api';
-import { getSafeKeyObjectFromStorage } from '@/shared/utils/safe-token-storage';
+import { ActivityService } from '@shared/services/api/api';
+import { getSafeKeyObjectFromStorage } from '@shared/utils/safe-token-storage';
 
 // Types based on API response
 interface Emotion {

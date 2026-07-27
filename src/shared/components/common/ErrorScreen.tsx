@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { Ionicons } from '@expo/vector-icons';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
 
 interface ErrorScreenProps {
     message?: string;

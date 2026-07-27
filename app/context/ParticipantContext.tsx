@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import api from '@/shared/services/api/api';
+import api from '@shared/services/api/api';
 
 // ─── Tipos ───
 

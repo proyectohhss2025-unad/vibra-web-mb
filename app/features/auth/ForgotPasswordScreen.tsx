@@ -7,10 +7,10 @@ import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } fro
 import { useRouter } from 'expo-router';
 import { useTailwind } from 'tailwind-rn';
 import GradientBackground from './components/GradientBackground';
-import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
-import TamaguiGlassCard from '@/shared/components/ui/tamagui/TamaguiGlassCard';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
-import AuthService, { EmailFormData } from '@/shared/services/api/auth';
+import { showTamaguiAlert } from '@shared/components/ui/tamagui';
+import TamaguiGlassCard from '@shared/components/ui/tamagui/TamaguiGlassCard';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
+import AuthService, { EmailFormData } from '@shared/services/api/auth';
 
 type Step = 'request' | 'success';
 

@@ -1,7 +1,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import { useCallback, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
-import eventBus from '@/shared/utils/event-bus';
+import eventBus from '@shared/utils/event-bus';
 
 interface NetworkStatus {
   isConnected: boolean;

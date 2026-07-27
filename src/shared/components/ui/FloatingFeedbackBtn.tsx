@@ -62,7 +62,7 @@ const FloatingFeedbackBtn: React.FC = () => {
 
     return (
         <>
-            <View style={[styles.container, { bottom: insets.bottom + 90, right: 24 }]} pointerEvents="box-none">
+            <View style={[styles.container, { bottom: insets.bottom + 90, right: 24, pointerEvents: 'box-none' as any }]}>
                 {/* Opciones expandidas */}
                 <Animated.View style={[styles.optionRow, { opacity: option2Opacity, transform: [{ translateY: option2TranslateY }] }]}>
                     <TouchableOpacity style={styles.optionBtn} onPress={() => handleSelect('support')} activeOpacity={0.8}>

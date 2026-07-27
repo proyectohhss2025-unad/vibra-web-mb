@@ -1,7 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, FlatList, Text, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
-import type { LeaderboardEntry } from '../hooks/useProfileData';
+import type { LeaderboardEntry } from '../_hooks/useProfileData';
 
 interface LeaderboardTableProps {
   leaderboard: LeaderboardEntry[];

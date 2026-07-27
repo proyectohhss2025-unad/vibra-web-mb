@@ -3,7 +3,7 @@ import { SafeAreaView, StatusBar, StyleSheet, View, Text, ScrollView } from 'rea
 import { DiceQuestion } from '../components/DiceGameConfig';
 import DiceGameActivity from '../components/DiceGameActivity';
 import DiceGameConfig from '../components/DiceGameConfig';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
 import { Ionicons } from '@expo/vector-icons';
 
 /**

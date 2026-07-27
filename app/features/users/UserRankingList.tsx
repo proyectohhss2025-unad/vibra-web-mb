@@ -1,11 +1,11 @@
 import { FontAwesome5 } from "@expo/vector-icons";
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import TamaguiSheet from '@/shared/components/ui/tamagui/TamaguiSheet';
+import TamaguiSheet from '@shared/components/ui/tamagui/TamaguiSheet';
 import { useTailwind } from 'tailwind-rn';
 import socket from '../../../socket';
-import api from '../../shared/services/api/api';
-import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
+import api from '@shared/services/api/api';
+import { showTamaguiAlert } from '@shared/components/ui/tamagui';
 
 const UserRankingList = () => {
     const tailwind = useTailwind();

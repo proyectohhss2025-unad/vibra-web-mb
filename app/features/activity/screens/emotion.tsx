@@ -1,6 +1,6 @@
 import React from 'react';
 import { SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
-import ReproductorMedia from '../../../shared/components/media/ReproductorMedia';
+import ReproductorMedia from '@shared/components/media/ReproductorMedia';
 import ActivityHistoryList from './ActivityHistoryList';
 import DailyActivityScreen from './DailyActivityScreen';
 

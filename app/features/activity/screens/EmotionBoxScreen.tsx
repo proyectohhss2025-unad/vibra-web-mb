@@ -5,8 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import EmotionBoxActivity from '../components/EmotionBoxActivity';
 import useUser from '@/context/UserContext';
-import { EmotionConfig, EmotionActivityResult } from '../types/emotion-box';
-import { ActivityService } from '@/shared/services/api/api';
+import { EmotionConfig, EmotionActivityResult } from '../_types/emotion-box';
+import { ActivityService } from '@shared/services/api/api';
 
 /**
  * Pantalla para la actividad de Caja de Emociones

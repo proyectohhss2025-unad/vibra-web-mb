@@ -6,14 +6,14 @@ import { useTranslation } from 'react-i18next';
 import React, { useEffect, useState } from 'react';
 import { Image, Modal, Platform, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
-import { getSafeKeyObjectFromStorage } from '../../shared/utils/safe-token-storage';
-import useAuth from '../../shared/hooks/useAuth';
+import { getSafeKeyObjectFromStorage } from '@shared/utils/safe-token-storage';
+import useAuth from '@shared/hooks/useAuth';
 import useUser, { UserProvider } from '@/context/UserContext';
 import useParticipant from '@/context/ParticipantContext';
-import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
-import AuthService, { EmailFormData } from '@/shared/services/api/auth';
-import api from '@/shared/services/api/api';
+import { showTamaguiAlert } from '@shared/components/ui/tamagui';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
+import AuthService, { EmailFormData } from '@shared/services/api/auth';
+import api from '@shared/services/api/api';
 const mainLogo = require('../../assets/logo-vibra.png');
 
 

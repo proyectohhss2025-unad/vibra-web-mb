@@ -1,12 +1,12 @@
-import TamaguiButton from "@/shared/components/ui/tamagui/TamaguiButton";
+import TamaguiButton from "@shared/components/ui/tamagui/TamaguiButton";
 import useUser from "@/context/UserContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Dimensions, ImageBackground, ScrollView, StyleSheet, View, Platform } from "react-native";
 import { ActivityIndicator, Checkbox, RadioButton, Surface, Text, TextInput } from "react-native-paper";
-import api from '../../shared/services/api/api';
-import { getSafeKeyObjectFromStorage } from "@/shared/utils/safe-token-storage";
+import api from '@shared/services/api/api';
+import { getSafeKeyObjectFromStorage } from "@shared/utils/safe-token-storage";
 
 type QuestionFromApi = {
     questionId: string;

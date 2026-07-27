@@ -5,9 +5,9 @@ import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 
 import { useKeepAwake } from 'expo-keep-awake';
-import { Resource } from '@/shared/types/activity';
+import { Resource } from '@shared/types/activity';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
+import { showTamaguiAlert } from '@shared/components/ui/tamagui';
 
 interface MediaPlayerProps {
     resource: Resource;

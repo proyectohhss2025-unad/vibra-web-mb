@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
-import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
+import { showTamaguiAlert } from '@shared/components/ui/tamagui';
 
 /**
  * Interfaz para las preguntas configurables del juego de dados

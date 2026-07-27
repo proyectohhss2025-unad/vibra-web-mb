@@ -1,4 +1,4 @@
-import useAuth from '@/shared/hooks/useAuth';
+import useAuth from '@shared/hooks/useAuth';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';

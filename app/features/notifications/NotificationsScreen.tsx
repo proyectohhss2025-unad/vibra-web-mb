@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, FlatList, Button } from 'react-native';
-import useNotificationStore from '../../shared/store/notification.store';
+import useNotificationStore from '@shared/store/notification.store';
 
 const NotificationsScreen = () => {
     const notifications = useNotificationStore((s) => s.notifications);

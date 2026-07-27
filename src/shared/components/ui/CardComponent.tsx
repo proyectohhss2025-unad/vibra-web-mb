@@ -1,7 +1,7 @@
 import useUser from '@/context/UserContext';
 import useParticipant from '@/context/ParticipantContext';
 import ActivityHistoryList from '@/features/activity/screens/ActivityHistoryList';
-import useCurrentDate from '@/shared/hooks/currentDate';
+import useCurrentDate from '@shared/hooks/currentDate';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';

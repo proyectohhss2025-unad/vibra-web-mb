@@ -2,12 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useSubmitResponse } from '../hooks/activity';
+import { useSubmitResponse } from '../_hooks/activity';
 import useUser from '@/context/UserContext';
 import EmotionBadge from './EmotionBadge';
-import { EmotionConfig, EmotionBoxActivityProps, EmotionActivityResult, EmotionPlacement } from '../types/emotion-box';
+import { EmotionConfig, EmotionBoxActivityProps, EmotionActivityResult, EmotionPlacement } from '../_types/emotion-box';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getSafeKeyObjectFromStorage } from '@/shared/utils/safe-token-storage';
+import { getSafeKeyObjectFromStorage } from '@shared/utils/safe-token-storage';
 
 // Emociones predeterminadas si no se proporcionan
 const DEFAULT_EMOTIONS: EmotionConfig[] = [

@@ -180,7 +180,7 @@ const PeekingBuddy: React.FC<PeekingBuddyProps> = ({
   const emoji = STATE_EMOJIS[buddyState];
 
   return (
-    <View style={styles.container} pointerEvents="box-none">
+    <View style={[styles.container, { pointerEvents: 'box-none' as any }]}>
       {/* Burbuja de tip */}
       {showBubble && currentTip && (
         <Animated.View

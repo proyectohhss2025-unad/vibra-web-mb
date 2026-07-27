@@ -1,6 +1,6 @@
 import useParticipant from '@/context/ParticipantContext';
-import useRanking from '@/shared/hooks/useRanking';
-import api from '@/shared/services/api/api';
+import useRanking from '@shared/hooks/useRanking';
+import api from '@shared/services/api/api';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 

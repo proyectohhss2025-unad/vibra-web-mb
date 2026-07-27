@@ -1858,5 +1858,96 @@
             "shadowRadius": 4,
             "elevation": 4
         }
+    },
+    "w-12": {
+        "style": {
+            "width": 48
+        }
+    },
+    "h-12": {
+        "style": {
+            "height": 48
+        }
+    },
+    "w-1": {
+        "style": {
+            "width": 4
+        }
+    },
+    "h-1": {
+        "style": {
+            "height": 4
+        }
+    },
+    "bg-indigo-50": {
+        "style": {
+            "backgroundColor": "#eef2ff"
+        }
+    },
+    "bg-indigo-100": {
+        "style": {
+            "backgroundColor": "#e0e7ff"
+        }
+    },
+    "text-indigo-500": {
+        "style": {
+            "color": "#6366f1"
+        }
+    },
+    "text-indigo-600": {
+        "style": {
+            "color": "#4f46e5"
+        }
+    },
+    "border-indigo-200": {
+        "style": {
+            "borderColor": "#c7d2fe"
+        }
+    },
+    "bg-amber-50": {
+        "style": {
+            "backgroundColor": "#fffbeb"
+        }
+    },
+    "bg-amber-600": {
+        "style": {
+            "backgroundColor": "#d97706"
+        }
+    },
+    "border-amber-300": {
+        "style": {
+            "borderColor": "#fcd34d"
+        }
+    },
+    "text-amber-800": {
+        "style": {
+            "color": "#92400e"
+        }
+    },
+    "border-l-4": {
+        "style": {
+            "borderLeftWidth": 4
+        }
+    },
+    "border-t": {
+        "style": {
+            "borderTopWidth": 1
+        }
+    },
+    "py-2.5": {
+        "style": {
+            "paddingTop": 10,
+            "paddingBottom": 10
+        }
+    },
+    "border-white/20": {
+        "style": {
+            "borderColor": "rgba(255,255,255,0.2)"
+        }
+    },
+    "bg-white/10": {
+        "style": {
+            "backgroundColor": "rgba(255,255,255,0.1)"
+        }
     }
 }

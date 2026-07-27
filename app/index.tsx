@@ -8,8 +8,8 @@ import { Platform, StyleSheet, View } from 'react-native';
 import LoginScreen from './features/auth/LoginScreen';
 // Import the global.css file in the index.js file:
 import '../global.css';
-import { ActivityService } from './shared/services/api/api';
-import useNotificationStore from './shared/store/notification.store';
+import { ActivityService } from '@shared/services/api/api';
+import useNotificationStore from '@shared/store/notification.store';
 
 // First, set the handler that will cause the notification
 // to show the alert

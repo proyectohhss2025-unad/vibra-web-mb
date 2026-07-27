@@ -1,4 +1,4 @@
-import type { Activity } from '@/shared/types/activity';
+import type { Activity } from '@shared/types/activity';
 
 export interface PaginatedResponse<T> {
     docs: T[];

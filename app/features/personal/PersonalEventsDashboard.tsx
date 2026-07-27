@@ -3,12 +3,12 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Platform }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useTailwind } from 'tailwind-rn';
-import api, { ActivityService, RankingApi } from '@/shared/services/api/api';
-import { getSafeKeyObjectFromStorage } from '@/shared/utils/safe-token-storage';
-import CalendarComponent from '@/shared/components/ui/CalendarComponent';
-import StatsBar from '@/shared/components/StatsBar';
-import ActivityCard from '@/shared/components/ActivityCard';
-import MiniRanking from '@/shared/components/MiniRanking';
+import api, { ActivityService, RankingApi } from '@shared/services/api/api';
+import { getSafeKeyObjectFromStorage } from '@shared/utils/safe-token-storage';
+import CalendarComponent from '@shared/components/ui/CalendarComponent';
+import StatsBar from '@shared/components/StatsBar';
+import ActivityCard from '@shared/components/ActivityCard';
+import MiniRanking from '@shared/components/MiniRanking';
 
 interface Activity {
   type: string;

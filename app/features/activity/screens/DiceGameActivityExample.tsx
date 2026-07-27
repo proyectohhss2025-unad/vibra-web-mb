@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { SafeAreaView, StatusBar, StyleSheet, View, Text } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import DiceGameScreen from './DiceGameScreen';
-import useActivityStore from '@/shared/store/activity.store';
-import ProgressBarII from '@/shared/components/ui/ProgressBarNew';
+import useActivityStore from '@shared/store/activity.store';
+import ProgressBarII from '@shared/components/ui/ProgressBarNew';
 import { LinearGradient } from 'expo-linear-gradient';
 
 /**

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Modal, ScrollView, Text, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
-import type { GameStatus } from '../hooks/useScoreTracker';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
+import type { GameStatus } from '../_hooks/useScoreTracker';
 
 interface ActivityCompleteSummaryProps {
   visible: boolean;

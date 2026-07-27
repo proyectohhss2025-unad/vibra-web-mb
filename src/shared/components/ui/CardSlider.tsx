@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { MaterialIcons } from '@expo/vector-icons';
-import { SliderCard, getSliderData } from '@/shared/services/sliderService';
+import { SliderCard, getSliderData } from '@shared/services/sliderService';
 import { useRouter } from 'expo-router';
 
 interface CardSliderProps {

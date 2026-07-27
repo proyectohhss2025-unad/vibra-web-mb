@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, ScrollView, Platform } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
-import { useSubmitResponse } from '../hooks/activity';
+import { useSubmitResponse } from '../_hooks/activity';
 import useUser from '@/context/UserContext';
-import useActivityStore from '@/shared/store/activity.store';
+import useActivityStore from '@shared/store/activity.store';
 import ScoreCounter from './ScoreCounter';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
-import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
+import { showTamaguiAlert } from '@shared/components/ui/tamagui';
 
 // Component types
 interface MatchingConceptsGameProps {

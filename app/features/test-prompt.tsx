@@ -7,12 +7,12 @@
  * - type=initial: Después del login, antes del dashboard
  * - type=final: Antes del logout, antes de limpiar sesión
  */
-import { TestsApi } from '@/shared/services/api/api';
+import { TestsApi } from '@shared/services/api/api';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
 import useAuthContext from '@/context/AuthContext';
 
 export default function TestPromptScreen() {

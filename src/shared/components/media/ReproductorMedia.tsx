@@ -6,7 +6,7 @@ const mediaItems = [
     {
         id: '1123456789',
         title: 'Video 1',
-        source: require('../../../assets/videos/video.mp4'),
+        source: require('@assets/videos/video.mp4'),
         type: 'video'
     },
     {
@@ -18,7 +18,7 @@ const mediaItems = [
     {
         id: '1237654',
         title: 'Audio 3',
-        source: require('../../../assets/videos/audio.mp3'),
+        source: require('@assets/videos/audio.mp3'),
         type: 'audio'
     }
 ];

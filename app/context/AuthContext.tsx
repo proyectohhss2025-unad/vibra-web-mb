@@ -7,8 +7,8 @@ import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Platform } from 'react-native';
-import AuthService from '@/shared/services/api/auth';
-import { TestsApi } from '@/shared/services/api/api';
+import AuthService from '@shared/services/api/auth';
+import { TestsApi } from '@shared/services/api/api';
 import useParticipant from './ParticipantContext';
 import useUser from './UserContext';
 

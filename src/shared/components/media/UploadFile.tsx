@@ -3,7 +3,7 @@ import { Button, StyleSheet, Text, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import Video from 'react-native-video';
 import api from '../../services/api/api';
-import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
+import { showTamaguiAlert } from '@shared/components/ui/tamagui';
 
 const UploadFile = () => {
     const [file, setFile] = useState<any | null>(null);

@@ -2,15 +2,15 @@
  * @fileoverview Axios instance configuration for API communication
  * @module services/api
  */
-import ActivityResponse, { PaginatedResponse } from '@/shared/types/api';
-import type { Activity } from '@/shared/types/activity';
+import ActivityResponse, { PaginatedResponse } from '@shared/types/api';
+import type { Activity } from '@shared/types/activity';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { router } from 'expo-router';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import config from '../../../../config/env.json';
-import eventBus from '@/shared/utils/event-bus';
+import eventBus from '@shared/utils/event-bus';
 
 /**
  * Base URL for the API obtained from environment configuration

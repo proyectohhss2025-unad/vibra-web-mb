@@ -1,5 +1,5 @@
-import useActivityStore from '@/shared/store/activity.store';
-import calculateScore from '@/shared/utils/score-utils';
+import useActivityStore from '@shared/store/activity.store';
+import calculateScore from '@shared/utils/score-utils';
 import { useMemo } from 'react';
 
 export interface GameStatus {

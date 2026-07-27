@@ -1,24 +1,30 @@
-import './shared/i18n/i18n';
+import '@shared/i18n/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
 import { router, Slot } from "expo-router";
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from "react";
-import { ImageBackground, Platform, StyleSheet, View } from "react-native";
+import { ImageBackground, LogBox, Platform, StyleSheet, View } from "react-native";
+
+// ─── Suppress harmless warnings on web ───
+if (Platform.OS === 'web') {
+  // useNativeDriver no es soportado en web; RN cae a JS automáticamente
+  LogBox.ignoreLogs(['useNativeDriver']);
+}
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { TailwindProvider } from "tailwind-rn";
 import { TamaguiProvider } from 'tamagui';
-import { TamaguiAlertProvider } from '@/shared/components/ui/tamagui';
+import { TamaguiAlertProvider } from '@shared/components/ui/tamagui';
 import '../global.css';
 import utilities from "../tailwind.json";
 import tamaguiConfig from '../config/tamagui.config';
 import { UserProvider } from './context/UserContext';
 import { ParticipantProvider } from './context/ParticipantContext';
 import { AuthProvider } from './context/AuthContext';
-import useNetworkStatus from '@/shared/hooks/useNetworkStatus';
-import OfflineScreen from '@/shared/components/OfflineScreen';
-import OfflineBanner from '@/shared/components/OfflineBanner';
-import FloatingFeedbackBtn from '@/shared/components/ui/FloatingFeedbackBtn';
+import useNetworkStatus from '@shared/hooks/useNetworkStatus';
+import OfflineScreen from '@shared/components/OfflineScreen';
+import OfflineBanner from '@shared/components/OfflineBanner';
+import FloatingFeedbackBtn from '@shared/components/ui/FloatingFeedbackBtn';
 
 function useNotificationObserver() {
   useEffect(() => {

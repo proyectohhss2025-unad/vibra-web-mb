@@ -6,7 +6,7 @@
     "paths": {
       "@/*": ["./app/*"],
       "@features/*": ["./app/features/*"],
-      "@shared/*": ["./app/shared/*"],
+      "@shared/*": ["./src/shared/*"],
       "@assets/*": ["./app/assets/*"],
       "@config/*": ["./config/*"]
     },

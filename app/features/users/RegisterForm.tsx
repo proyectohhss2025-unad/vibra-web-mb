@@ -4,12 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useTailwind } from 'tailwind-rn';
-import api from '../../shared/services/api/api';
-import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
+import api from '@shared/services/api/api';
+import { showTamaguiAlert } from '@shared/components/ui/tamagui';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import UserIllustration from '@/shared/components/illustrations/UserIllustration';
+import UserIllustration from '@shared/components/illustrations/UserIllustration';
 
 const RegisterForm = () => {
     const tailwind = useTailwind();

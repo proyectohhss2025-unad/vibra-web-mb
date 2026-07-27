@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button } from 'react-native';
-import api from '../../shared/services/api/api';
-import { showTamaguiAlert } from '@/shared/components/ui/tamagui';
+import api from '@shared/services/api/api';
+import { showTamaguiAlert } from '@shared/components/ui/tamagui';
 
 interface EmailFormData {
     to: string;

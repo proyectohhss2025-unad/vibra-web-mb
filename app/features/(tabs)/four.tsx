@@ -7,7 +7,7 @@ import LeaderboardTable from '../participant/components/LeaderboardTable';
 import LevelProgressBar from '../participant/components/LevelProgressBar';
 import ProfileHeader from '../participant/components/ProfileHeader';
 import StreakCalendar from '../participant/components/StreakCalendar';
-import useProfileData from '../participant/hooks/useProfileData';
+import useProfileData from '../participant/_hooks/useProfileData';
 import EditProfileModal from '../profile/components/EditProfileModal';
 
 export default function TabFour() {

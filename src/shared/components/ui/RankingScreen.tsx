@@ -1,4 +1,4 @@
-import { UserRank } from "@/shared/types/ranking";
+import { UserRank } from "@shared/types/ranking";
 import { useState, useRef, useEffect } from "react";
 import { View, FlatList, RefreshControl, Text, Image, StyleSheet } from "react-native";
 import { ProgressBar } from "react-native-paper";

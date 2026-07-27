@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, KeyboardAvoidingView, Platform, Animated } from 'react-native';
-import Question from '../../../shared/types/activity';
+import Question from '@shared/types/activity';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import TamaguiButton from '@/shared/components/ui/tamagui/TamaguiButton';
-import useActivityStore from '@/shared/store/activity.store';
+import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
+import useActivityStore from '@shared/store/activity.store';
 
 interface QuestionSectionProps {
     questions: Question;
