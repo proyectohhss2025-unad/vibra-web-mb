@@ -8,6 +8,7 @@
 import React from 'react'
 import { type TextInputProps as RNTextInputProps, type ViewStyle } from 'react-native'
 import { Input } from 'tamagui'
+import useFontScale from '@/context/FontScaleContext'
 
 type TamaguiInputProps = {
   placeholder?: string
@@ -51,6 +52,7 @@ const TamaguiInput: React.FC<TamaguiInputProps> = ({
   placeholderTextColor,
 }) => {
   const flatStyle = flattenStyle(style)
+  const { fontScale } = useFontScale()
   return (
     <Input
       placeholder={placeholder}
@@ -68,7 +70,7 @@ const TamaguiInput: React.FC<TamaguiInputProps> = ({
       backgroundColor="rgba(255,255,255,0.1)"
       color="white"
       padding={16}
-      fontSize={16}
+      fontSize={16 * fontScale}
       {...(flatStyle ? { style: flatStyle } : {})}
       {...(placeholderTextColor ? { placeholderTextColor: placeholderTextColor as any } : {})}
     />

@@ -39,7 +39,7 @@ const MiniRanking = ({ items, accentColor }: MiniRankingProps) => {
       </View>
 
       {items.map((item, index) => (
-        <View key={item.userId} style={tailwind('flex-row items-center py-1.5 border-b border-gray-100')}>
+        <View key={`${item.userId}-${index}`} style={tailwind('flex-row items-center py-1.5 border-b border-gray-100')}>
           <View style={[
             tailwind('w-7 h-7 rounded-full items-center justify-center mr-2'),
             tailwind(positionStyles[index] || positionStyles[3]),

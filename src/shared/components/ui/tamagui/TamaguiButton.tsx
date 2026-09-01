@@ -10,6 +10,7 @@ import React, { useCallback } from 'react'
 import { Pressable, type ViewStyle } from 'react-native'
 import { Button, Text, YStack, styled } from 'tamagui'
 import { MaterialIcons } from '@expo/vector-icons'
+import useFontScale from '@/context/FontScaleContext'
 
 // ─── Paleta de colores Vibra ────────────────────────────────────────────
 type ColorEntry = { base: string; light: string; dark: string }
@@ -69,6 +70,7 @@ const TamaguiButton: React.FC<TamaguiButtonProps> = ({
 }) => {
   const c = colorMap[variantColor] || colorMap.blue
   const flatStyle = flatten(style as any)
+  const { fontScale } = useFontScale()
 
   // Extraer altura del style externo para no perderla, pero aplicar mínimo
   const externalHeight = flatStyle?.height
@@ -124,7 +126,7 @@ const TamaguiButton: React.FC<TamaguiButtonProps> = ({
           <Text
             color="white"
             fontWeight="bold"
-            fontSize={13}
+            fontSize={13 * fontScale}
             textAlign="center"
             numberOfLines={2}
           >
@@ -143,7 +145,7 @@ const TamaguiButton: React.FC<TamaguiButtonProps> = ({
       borderRadius={10}
       color="white"
       fontWeight="bold"
-      fontSize={16}
+      fontSize={16 * fontScale}
       height={externalHeight || 50}
       minHeight={48}
       paddingHorizontal={20}

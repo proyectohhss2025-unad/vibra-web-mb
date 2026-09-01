@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Text, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Text, Platform, Image } from 'react-native';
 import { Video, Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
@@ -49,6 +49,11 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ resource, onComplete }) => {
         const loadMedia = async () => {
             try {
                 setIsLoading(true);
+
+                if (resource.type === 'image') {
+                    // Las imágenes no requieren precarga de audio/video
+                    return;
+                }
 
                 console.log('resource:', resource);
                 handleSelectMedia(resource);
@@ -143,7 +148,21 @@ const MediaPlayer: React.FC<MediaPlayerProps> = ({ resource, onComplete }) => {
     return (
         <View style={styles.container}>
             <KeepAwakeActivator />
-            {resource?.type === 'video' ? (<>
+            {resource?.type === 'image' ? (
+                <View style={styles.imageContainer}>
+                    <Image
+                        source={{ uri: resource.url }}
+                        style={styles.image}
+                        resizeMode="contain"
+                    />
+                    <TouchableOpacity
+                        style={styles.completeButton}
+                        onPress={onComplete}
+                    >
+                        <Text style={styles.completeButtonText}>Continuar</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : resource?.type === 'video' ? (<>
                 {/*<Video
                     ref={videoRef}
                     style={styles.media}
@@ -226,6 +245,29 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#2a2a2a',
+    },
+    imageContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#1a1a2e',
+        padding: 16,
+    },
+    image: {
+        flex: 1,
+        width: '100%',
+    },
+    completeButton: {
+        marginTop: 16,
+        backgroundColor: '#3B82F6',
+        paddingVertical: 12,
+        paddingHorizontal: 32,
+        borderRadius: 10,
+    },
+    completeButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
     },
     controls: {
         position: 'absolute',

@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useSubmitResponse } from '../_hooks/activity';
 import useUser from '@/context/UserContext';
+import useParticipant from '@/context/ParticipantContext';
+import { ActivityService } from '@shared/services/api/api';
 import EmotionBadge from './EmotionBadge';
 import { EmotionConfig, EmotionBoxActivityProps, EmotionActivityResult, EmotionPlacement } from '../_types/emotion-box';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -33,7 +34,7 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
 }) => {
     const tailwind = useTailwind();
     const { user } = useUser();
-    const { mutate: submitResponse } = useSubmitResponse();
+    const { participant } = useParticipant();
 
     const [availableEmotions, setAvailableEmotions] = useState<EmotionConfig[]>(emotions);
     const [healthyBoxEmotions, setHealthyBoxEmotions] = useState<EmotionConfig[]>([]);
@@ -183,11 +184,19 @@ const EmotionBoxActivity: React.FC<EmotionBoxActivityProps> = ({
             placements,
         };
 
-        submitResponse({
-            activityId,
-            userId: userId || '',
-            answers: result,
-        });
+        // Registrar el resultado del juego vía createCompletion (requiere participant y activityId real)
+        if (participant?._id && /^[0-9a-fA-F]{24}$/.test(activityId || '')) {
+            ActivityService.createCompletion({
+                participant: participant._id,
+                activity: activityId || '',
+                plannedScore: 100,
+                achievedScore: finalScore,
+                timeSpent,
+                gamesCompleted: [{ type: 'EmotionBox', score: finalScore, maxScore: 100 }],
+            }).catch((err: any) =>
+                console.warn('[EmotionBox] Error registering completion:', err?.message),
+            );
+        }
 
         if (onComplete) onComplete(result);
 

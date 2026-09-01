@@ -369,6 +369,7 @@ const DailyActivityScreen = () => {
                                 <EmotionBoxScreen
                                     emotions={currentGame?.config?.emotions}
                                     timeLimit={currentGame?.config?.timeLimit}
+                                    activityId={data?.activity?._id}
                                 />
                             </View>}
 
@@ -378,6 +379,7 @@ const DailyActivityScreen = () => {
                                 <Text style={[styles.gameDescription, tailwind('text-sm mb-4')]}>Lanza los dados y acierta en las preguntas.</Text>
                                 <DiceGameScreen
                                     questions={currentGame?.config?.questions}
+                                    activityId={data?.activity?._id}
                                 />
                             </View>}
                     </View>

@@ -134,8 +134,10 @@ export const ActivityService = {
         api.get(`/api/activities/${activityId}/check-response`, { params: { userId } }).then(res => res.data),
     submitResponse: (activityId: string, userId: string, data: any) =>
         api.post(`/api/activities/${activityId}/${userId}/submit`, {
-            params: { id: activityId, userId },
-            answers: [...data]
+            // Los ids van en la URL (@Param); el body solo lleva answers.
+            // answers puede ser un array de {questionId, answer} (preguntas)
+            // o un objeto de resultado de juego (score, timeSpent, etc.).
+            answers: Array.isArray(data) ? [...data] : data
         }),
     getActivityHistory: (page = 1, userId = '') =>
         api.get<PaginatedResponse<Activity>>('/api/activities', {
@@ -157,11 +159,25 @@ export const ActivityService = {
      * @param {string} userId - The user ID
      * @param {number} page - Page number (default: 1)
      * @param {number} limit - Items per page (default: 10)
+     * @param {string} [type] - Optional filter by activity type ('reto', 'evento_personal', 'actividad_pares', 'otro'). Sin type devuelve todas.
      * @returns {Promise<any>} - Promise that resolves to paginated challenges
      */
-    getChallenges: (userId: string, page = 1, limit = 10) =>
+    getChallenges: (userId: string, page = 1, limit = 10, type?: string) =>
         api.get<any>(`/api/activities/user/${userId}`, {
-            params: { page, limit }
+            params: { page, limit, ...(type ? { type } : {}) }
+        }).then(res => res.data),
+    /**
+     * Retrieves available activities (active and not yet responded) for a user
+     * @function
+     * @param {string} userId - The user ID
+     * @param {number} page - Page number (default: 1)
+     * @param {number} limit - Items per page (default: 10)
+     * @param {string} [type] - Optional filter by activity type ('reto', 'evento_personal', 'actividad_pares', 'otro'). Sin type devuelve todas.
+     * @returns {Promise<any>} - Promise that resolves to paginated available activities
+     */
+    getAvailableActivities: (userId: string, page = 1, limit = 10, type?: string) =>
+        api.get<any>(`/api/activities/available/${userId}`, {
+            params: { page, limit, ...(type ? { type } : {}) }
         }).then(res => res.data),
     /**
      * Registra el Expo Push Token del dispositivo en el backend

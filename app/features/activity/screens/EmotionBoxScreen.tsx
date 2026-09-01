@@ -36,9 +36,11 @@ const mapCategoryToType = (category?: string): 'sana' | 'gestionar' => {
 interface EmotionBoxScreenProps {
     emotions?: Array<{ id: string; name: string; type: 'sana' | 'gestionar'; imageUrl?: string }>;
     timeLimit?: number;
+    /** ID real de la actividad (MongoId) para registrar la completación del juego. Opcional: si no llega, el juego no persiste el resultado. */
+    activityId?: string;
 }
 
-const EmotionBoxScreen: React.FC<EmotionBoxScreenProps> = ({ emotions: propEmotions, timeLimit: propTimeLimit }) => {
+const EmotionBoxScreen: React.FC<EmotionBoxScreenProps> = ({ emotions: propEmotions, timeLimit: propTimeLimit, activityId }) => {
     const tailwind = useTailwind();
     const router = useRouter();
     const { user } = useUser();
@@ -261,7 +263,7 @@ const EmotionBoxScreen: React.FC<EmotionBoxScreenProps> = ({ emotions: propEmoti
             ) : (
                 // Modo de actividad
                 <EmotionBoxActivity
-                    activityId="emotion-box-activity"
+                    activityId={activityId ?? 'emotion-box-activity'}
                     emotions={configuredEmotions}
                     timeLimit={activityConfig.timeLimit}
                     onComplete={handleActivityComplete}

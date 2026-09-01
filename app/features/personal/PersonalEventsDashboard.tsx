@@ -80,20 +80,22 @@ const PersonalEventsDashboard = () => {
       setError(null);
 
       const [response, participantRes] = await Promise.all([
-        ActivityService.getChallenges(userId, 1, 50),
+        ActivityService.getAvailableActivities(userId, 1, 50, 'evento_personal'),
         api.get(`/api/participants/by-user/${userId}`).then(r => r.data).catch(() => null),
       ]);
 
+      // El backend ya filtra por type='evento_personal' (incluye las actividades
+      // sin type, que son el default del schema) y excluye las respondidas —
+      // GET /api/activities/available/:userId?type=evento_personal
       const activitiesData = Array.isArray(response) ? response : (response?.data || response?.docs || []);
-      const personalEvents = activitiesData.filter((a: Activity) => a.type === 'evento_personal');
-      setAllEvents(personalEvents);
-      filterEventsByDate(personalEvents, selectedDate);
+      setAllEvents(activitiesData);
+      filterEventsByDate(activitiesData, selectedDate);
 
       const completedCount = participantRes?.totalActivitiesCompleted || 0;
       setStats({
-        disponibles: personalEvents.length,
-        enProgreso: Math.max(0, personalEvents.length - completedCount),
-        completados: Math.min(completedCount, personalEvents.length),
+        disponibles: activitiesData.length,
+        enProgreso: Math.max(0, activitiesData.length - completedCount),
+        completados: Math.min(completedCount, activitiesData.length),
       });
 
       const courseId = participantRes?.currentCourse || null;

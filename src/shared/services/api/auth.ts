@@ -47,7 +47,13 @@ const AuthService = {
             }
 
             throw new Error('Credenciales incorrectas o error en la conexión.');
-        } catch (error) {
+        } catch (error: any) {
+            // Propagar el mensaje del servidor cuando exista (ej: cuenta pendiente
+            // de aprobación) para dar contexto claro al usuario.
+            const serverMsg = error?.response?.data?.message;
+            if (typeof serverMsg === 'string' && serverMsg) {
+                throw new Error(serverMsg);
+            }
             throw new Error('Credenciales incorrectas o error en la conexión.');
         }
     },

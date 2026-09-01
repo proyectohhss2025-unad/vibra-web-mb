@@ -63,10 +63,22 @@ const useProfileData = () => {
 
   // Combinar WebSocket + REST para leaderboard
   const leaderboard = useMemo<LeaderboardEntry[]>(() => {
-    if (wsRankings && wsRankings.length > 0) {
-      return wsRankings as LeaderboardEntry[];
+    const source =
+      wsRankings && wsRankings.length > 0
+        ? (wsRankings as LeaderboardEntry[])
+        : (lbData?.leaderboard ?? []);
+    // Deduplicar por userId: un usuario puede tener varios participantes
+    // (uno por curso) y aparecer repetido en el ranking. Se conserva la
+    // primera entrada para que cada usuario tenga una sola posición.
+    const seen = new Set<string>();
+    const unique: LeaderboardEntry[] = [];
+    for (const entry of source) {
+      const uid = String(entry.userId);
+      if (!uid || seen.has(uid)) continue;
+      seen.add(uid);
+      unique.push(entry);
     }
-    return lbData?.leaderboard ?? [];
+    return unique;
   }, [wsRankings, lbData]);
 
   const leaderboardTotal = lbData?.totalCount ?? 0;

@@ -1,5 +1,5 @@
 export interface Resource {
-    type: 'video' | 'audio';
+    type: 'video' | 'audio' | 'image';
     url: string;
 }
 

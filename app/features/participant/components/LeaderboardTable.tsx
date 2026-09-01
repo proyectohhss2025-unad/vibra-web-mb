@@ -112,7 +112,7 @@ const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
       <FlatList
         data={leaderboard}
         renderItem={renderItem}
-        keyExtractor={(item) => item.userId}
+        keyExtractor={(item, index) => `${item.userId}-${index}`}
         scrollEnabled={false}
         ItemSeparatorComponent={() => <View style={tailwind('h-px bg-gray-100')} />}
       />

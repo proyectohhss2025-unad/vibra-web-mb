@@ -1,29 +1,39 @@
-import { UserRank } from "@shared/types/ranking";
+import { UserRank } from "@/shared/types/ranking";
 import { useState, useRef, useEffect } from "react";
 import { View, FlatList, RefreshControl, Text, Image, StyleSheet } from "react-native";
 import { ProgressBar } from "react-native-paper";
 import { MAX_SCORE } from "../../utils/constants";
+import io from 'socket.io-client';
+
+const SOCKET_URL = typeof window !== 'undefined' ? window.location.origin : '';
 
 const RankingScreen = () => {
     const [rankings, setRankings] = useState<UserRank[]>([]);
-    const ws: any = useRef<WebSocket>(null);
+    const socketRef: any = useRef(null);
 
     const fetchRankings = async () => {
-        const response = await fetch('http://localhost:4000/ranking');
+        const response = await fetch('/api/rankings/general');
         const data = await response.json();
         setRankings(data);
     };
 
     useEffect(() => {
-        ws.current = new WebSocket('http://localhost:4000');
-        ws.current.onmessage = (e: any) => {
-            const data = JSON.parse(e.data);
-            if (data.type === 'rankingUpdate') {
-                setRankings(data.payload);
-            }
-        };
+        const socket = io(SOCKET_URL, { transports: ['polling', 'websocket'] });
+        socketRef.current = socket;
 
-        return () => ws.current?.close();
+        socket.on('connect', () => {
+            socket.emit('joinRankingRoom');
+        });
+
+        socket.on('rankingsUpdate', (data: UserRank[]) => {
+            setRankings(data);
+        });
+
+        socket.on('initialRankings', (data: UserRank[]) => {
+            setRankings(data);
+        });
+
+        return () => { socket.disconnect(); };
     }, []);
 
     const renderItem = ({ item }: any) => (
@@ -42,7 +52,7 @@ const RankingScreen = () => {
         <FlatList
             data={rankings}
             renderItem={renderItem}
-            keyExtractor={item => item.userId}
+            keyExtractor={(item, index) => `${item.userId}-${index}`}
             refreshControl={<RefreshControl refreshing onRefresh={fetchRankings} />}
         />
     );
@@ -70,4 +80,3 @@ const styles = StyleSheet.create({
     }
 });
 export default RankingScreen;
-

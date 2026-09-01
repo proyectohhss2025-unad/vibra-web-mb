@@ -3,6 +3,7 @@ import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
 import useParticipant from '@/context/ParticipantContext';
 import useAuthContext from '@/context/AuthContext';
+import FontSizeControl from '../../profile/components/FontSizeControl';
 import config from '../../../../config/env.json';
 
 const API_BASE = config.development.apiBaseUrl;
@@ -92,6 +93,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ onEditPress }) => {
       >
         <Text style={tailwind('text-white text-sm font-medium')}>Cerrar sesión</Text>
       </TouchableOpacity>
+
+      {/* Control de tamaño de fuente (accesibilidad) */}
+      <FontSizeControl />
     </View>
   );
 };

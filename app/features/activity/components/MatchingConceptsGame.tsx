@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, ScrollView, Platform } from 'react-native';
 import { useTailwind } from 'tailwind-rn';
-import { useSubmitResponse } from '../_hooks/activity';
 import useUser from '@/context/UserContext';
+import useParticipant from '@/context/ParticipantContext';
+import { ActivityService } from '@shared/services/api/api';
 import useActivityStore from '@shared/store/activity.store';
 import ScoreCounter from './ScoreCounter';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
@@ -52,7 +53,7 @@ const MatchingConceptsGame: React.FC<MatchingConceptsGameProps> = ({
 }) => {
     const tailwind = useTailwind();
     const { user } = useUser();
-    const submitResponse = useSubmitResponse();
+    const { participant } = useParticipant();
 
     // Game states
     const [items, setItems] = useState<ConceptItem[]>([]);
@@ -273,18 +274,19 @@ const MatchingConceptsGame: React.FC<MatchingConceptsGameProps> = ({
             totalPairs: conceptPairs.length,
         };
 
-        // Send results to API
-        if (user?.id) {
-            submitResponse.mutate({
-                activityId,
-                userId: user.id,
-                answers: {
-                    score: finalScore,
-                    timeSpent: finalTimeSpent,
-                    matchedPairs: matchedPairs.length,
-                    totalPairs: conceptPairs.length,
-                },
-            });
+        // Registrar el resultado del juego vía createCompletion (requiere participant y activityId real)
+        if (participant?._id && /^[0-9a-fA-F]{24}$/.test(activityId || '')) {
+            const maxScore = conceptPairs.length * 100;
+            ActivityService.createCompletion({
+                participant: participant._id,
+                activity: activityId || '',
+                plannedScore: maxScore,
+                achievedScore: finalScore,
+                timeSpent: finalTimeSpent,
+                gamesCompleted: [{ type: 'MatchingConcepts', score: finalScore, maxScore }],
+            }).catch((err: any) =>
+                console.warn('[Matching] Error registering completion:', err?.message),
+            );
         }
 
         // Call callback if exists

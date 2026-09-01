@@ -9,6 +9,7 @@ import { Image, Platform, StyleSheet, Switch, Text, TextInput, View } from 'reac
 import { useTailwind } from 'tailwind-rn';
 import { getSafeKeyObjectFromStorage } from '@shared/utils/safe-token-storage';
 import useAuthContext from '@/context/AuthContext';
+import FontSizeControl from '../../profile/components/FontSizeControl';
 import { showTamaguiAlert } from '@shared/components/ui/tamagui';
 import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
 import TamaguiGlassCard from '@shared/components/ui/tamagui/TamaguiGlassCard';
@@ -182,6 +183,11 @@ const LoginCard: React.FC<LoginCardProps> = ({ onForgotPassword }) => {
                 style={[styles.button, tailwind('mb-4')]}
             />
 
+            {/* Control de tamaño de fuente (accesibilidad) */}
+            <View style={styles.fontScaleContainer}>
+                <FontSizeControl />
+            </View>
+
             {/* Olvidaste tu contraseña */}
             <Text
                 style={[styles.link, tailwind('text-white text-center text-base mt-2')]}
@@ -228,6 +234,10 @@ const styles = StyleSheet.create({
     },
     link: {
         textDecorationLine: 'underline',
+    },
+    fontScaleContainer: {
+        alignItems: 'center',
+        marginBottom: 8,
     },
 });
 

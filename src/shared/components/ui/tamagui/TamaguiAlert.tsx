@@ -10,6 +10,7 @@
  */
 import React, { useState, useCallback } from 'react'
 import { AlertDialog, Button, XStack, YStack } from 'tamagui'
+import useFontScale from '@/context/FontScaleContext'
 
 type AlertOptions = {
   primaryLabel?: string
@@ -61,6 +62,7 @@ export const TamaguiAlertProvider: React.FC<{ children: React.ReactNode }> = ({ 
     message: '',
     options: {},
   })
+  const { fontScale } = useFontScale()
 
   // Registrar el setter global
   React.useEffect(() => {
@@ -94,10 +96,10 @@ export const TamaguiAlertProvider: React.FC<{ children: React.ReactNode }> = ({ 
             maxWidth={400}
           >
             <YStack gap="$3">
-              <AlertDialog.Title fontWeight="bold" fontSize={20}>
+              <AlertDialog.Title fontWeight="bold" fontSize={20 * fontScale}>
                 {alert.title}
               </AlertDialog.Title>
-              <AlertDialog.Description fontSize={15} lineHeight={22} color="$color" opacity={0.8}>
+              <AlertDialog.Description fontSize={15 * fontScale} lineHeight={22} color="$color" opacity={0.8}>
                 {alert.message}
               </AlertDialog.Description>
 

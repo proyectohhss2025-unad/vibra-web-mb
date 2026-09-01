@@ -21,6 +21,7 @@ import tamaguiConfig from '../config/tamagui.config';
 import { UserProvider } from './context/UserContext';
 import { ParticipantProvider } from './context/ParticipantContext';
 import { AuthProvider } from './context/AuthContext';
+import { FontScaleProvider } from './context/FontScaleContext';
 import useNetworkStatus from '@shared/hooks/useNetworkStatus';
 import OfflineScreen from '@shared/components/OfflineScreen';
 import OfflineBanner from '@shared/components/OfflineBanner';
@@ -75,6 +76,7 @@ export default function RootLayout() {
       {/* @ts-expect-error — TailwindProvider types don't include children in this version */}
       <TailwindProvider utilities={utilities}>
         <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
+        <FontScaleProvider>
         <UserProvider>
           <ParticipantProvider>
           <AuthProvider>
@@ -101,6 +103,7 @@ export default function RootLayout() {
           </AuthProvider>
           </ParticipantProvider>
         </UserProvider>
+        </FontScaleProvider>
         </TamaguiProvider>
       </TailwindProvider>
     </QueryClientProvider>

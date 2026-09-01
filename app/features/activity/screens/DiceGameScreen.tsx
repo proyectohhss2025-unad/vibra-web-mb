@@ -5,6 +5,8 @@ import DiceGameActivity from '../components/DiceGameActivity';
 import DiceGameConfig from '../components/DiceGameConfig';
 import TamaguiButton from '@shared/components/ui/tamagui/TamaguiButton';
 import { Ionicons } from '@expo/vector-icons';
+import useParticipant from '@/context/ParticipantContext';
+import { ActivityService } from '@shared/services/api/api';
 
 /**
  * Interfaz para los resultados del juego
@@ -23,13 +25,15 @@ interface GameResult {
 
 interface DiceGameScreenProps {
     questions?: DiceQuestion[];
+    /** ID real de la actividad (MongoId) para registrar la completación del juego. Opcional: si no llega, el botón "Enviar resultados" solo prepara los datos. */
+    activityId?: string;
 }
 
 /**
  * Componente principal para la pantalla del juego de dados
  * @returns {JSX.Element} Componente renderizado
  */
-const DiceGameScreen: React.FC<DiceGameScreenProps> = ({ questions: propQuestions }) => {
+const DiceGameScreen: React.FC<DiceGameScreenProps> = ({ questions: propQuestions, activityId }) => {
     // Estados del componente
     const [questions, setQuestions] = useState<DiceQuestion[]>(propQuestions ?? []);
     const [showConfig, setShowConfig] = useState(false);
@@ -38,6 +42,7 @@ const DiceGameScreen: React.FC<DiceGameScreenProps> = ({ questions: propQuestion
         id: 'student-001',
         name: 'Estudiante de Prueba'
     });
+    const { participant } = useParticipant();
 
     // Preguntas de ejemplo para demostración
     useEffect(() => {
@@ -141,6 +146,24 @@ const DiceGameScreen: React.FC<DiceGameScreenProps> = ({ questions: propQuestion
         };
 
         console.log('Datos listos para enviar a la API:', apiData);
+
+        // Registrar la completación del juego vía createCompletion
+        // (requiere participant + activityId real + al menos 1 resultado)
+        if (participant?._id && /^[0-9a-fA-F]{24}$/.test(activityId || '') && gameResults.length > 0) {
+            const achievedScore = gameResults.reduce((sum, r) => sum + r.points, 0);
+            const timeSpent = gameResults.reduce((sum, r) => sum + r.responseTime, 0);
+            ActivityService.createCompletion({
+                participant: participant._id,
+                activity: activityId || '',
+                plannedScore: 120,
+                achievedScore,
+                timeSpent,
+                gamesCompleted: [{ type: 'DiceGame', score: achievedScore, maxScore: 120 }],
+            }).catch((err: any) =>
+                console.warn('[DiceGame] Error registering completion:', err?.message),
+            );
+        }
+
         // Aquí se implementaría la llamada a la API
         return apiData;
     };

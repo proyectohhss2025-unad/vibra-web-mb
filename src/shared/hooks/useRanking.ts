@@ -1,16 +1,14 @@
 import RankingEntry from '@shared/types/ranking';
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
-import config from '../../../config/env.json';
 
-const API_BASE = config.development.apiBaseUrl; // http://localhost:4000
+const SOCKET_URL = typeof window !== 'undefined' ? window.location.origin : '';
 
 const useRanking = () => {
     const [rankings, setRankings] = useState<RankingEntry[]>([]);
     const [socket] = useState(() => {
-        const socketUrl = `${API_BASE}/rankings`;
-        console.log('[useRanking] Connecting to:', socketUrl);
-        return io(socketUrl, { transports: ['polling', 'websocket'] });
+        console.log('[useRanking] Connecting to:', SOCKET_URL);
+        return io(SOCKET_URL, { transports: ['polling', 'websocket'] });
     });
 
     useEffect(() => {

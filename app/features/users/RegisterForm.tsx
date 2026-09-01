@@ -11,6 +11,35 @@ import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import UserIllustration from '@shared/components/illustrations/UserIllustration';
 
+// ─── Checklist visual de requisitos de contraseña (alineado con CreateUserDto) ───
+const PASSWORD_RULES: { label: string; test: (p: string) => boolean }[] = [
+    { label: 'Mínimo 8 caracteres', test: (p) => p.length >= 8 },
+    { label: 'Una letra mayúscula (A-Z)', test: (p) => /[A-Z]/.test(p) },
+    { label: 'Una letra minúscula (a-z)', test: (p) => /[a-z]/.test(p) },
+    { label: 'Un número (0-9)', test: (p) => /\d/.test(p) },
+    { label: 'Un carácter especial (@$!%*?&#)', test: (p) => /[@$!%*?&#]/.test(p) },
+];
+
+const PasswordRequirementList = ({ password }: { password: string }) => (
+    <View style={styles.passwordRulesContainer}>
+        {PASSWORD_RULES.map((rule) => {
+            const met = rule.test(password);
+            return (
+                <View key={rule.label} style={styles.passwordRuleRow}>
+                    <MaterialCommunityIcons
+                        name={met ? 'check-circle' : 'close-circle'}
+                        size={16}
+                        color={met ? '#00CC00' : '#FF6B6B'}
+                    />
+                    <Text style={[styles.passwordRuleText, met && styles.passwordRuleMet]}>
+                        {rule.label}
+                    </Text>
+                </View>
+            );
+        })}
+    </View>
+);
+
 const RegisterForm = () => {
     const tailwind = useTailwind();
     const router = useRouter();
@@ -22,15 +51,11 @@ const RegisterForm = () => {
     const [documentNumber, setDocumentNumber] = useState('');
     const [typeDocument, setTypeDocument] = useState('');
     const [email, setEmail] = useState('');
-    const [role, setRole] = useState('');
     const [hightSchool, setHightSchool] = useState('');
-    const [course, setCourse] = useState('');
 
     // Options state (tipos any porque vienen de API)
     const [typeDocumentOptions, setTypeDocumentOptions] = useState<any[]>([]);
-    const [roleOptions, setRoleOptions] = useState<any[]>([]);
     const [hightSchoolOptions, setHightSchoolOptions] = useState<any[]>([]);
-    const [courseOptions, setCourseOptions] = useState<any[]>([]);
 
     // Loading states
     const [loadingForm, setLoadingForm] = useState(false);
@@ -54,23 +79,15 @@ const RegisterForm = () => {
         }
     };
 
-    // Get role name for badge
-    const getRoleName = () => {
-        const selectedRole = roleOptions.find((r: any) => r._id === role);
-        return selectedRole?.name || '';
-    };
-
     // Load options on mount
     useEffect(() => {
         const fetchOptions = async () => {
             try {
-                const [typeDocRes, rolesRes, schoolsRes] = await Promise.all([
+                const [typeDocRes, schoolsRes] = await Promise.all([
                     api.get(`/api/document-types/all`),
-                    api.get(`/api/roles?page=1&limit=50`),
                     api.get(`/api/company?page=1&rows=50`)
                 ]);
                 setTypeDocumentOptions([{ _id: '__placeholder__', description: 'Seleccione un tipo', name: 'Seleccione un tipo' }, ...typeDocRes.data]);
-                setRoleOptions([{ _id: '', name: 'Seleccione un rol' }, ...rolesRes.data.items]);
                 setHightSchoolOptions([{ _id: '', name: 'Seleccione una institución' }, ...schoolsRes.data.companies]);
             } catch (error) {
                 console.error('Error fetching options:', error);
@@ -81,24 +98,6 @@ const RegisterForm = () => {
         fetchOptions();
     }, []);
 
-    // Load courses when hightSchool changes
-    useEffect(() => {
-        const fetchCourses = async () => {
-            if (hightSchool) {
-                try {
-                    const response = await api.get(`/api/courses?companyId=${hightSchool}&page=1&rows=50`);
-                    setCourseOptions([{ _id: '', name: 'Seleccione un curso' }, ...response.data.courses]);
-                } catch (error) {
-                    console.error('Error fetching courses:', error);
-                }
-            } else {
-                setCourseOptions([]);
-                setCourse('');
-            }
-        };
-        fetchCourses();
-    }, [hightSchool]);
-
     // Validation functions
     const validateEmail = (email: string): boolean => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -106,8 +105,9 @@ const RegisterForm = () => {
     };
 
     const validatePassword = (password: string): boolean => {
-        // Min 8 chars, 1 number, 1 uppercase, 1 special char
-        const passwordRegex = /^(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*()_+=\-[\]{};':"\\|,.<>\/?]).{8,}$/;
+        // Misma política que el backend (CreateUserDto):
+        // mínimo 8 caracteres, mayúscula, minúscula, número y carácter especial (@$!%*?&#)
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
         return passwordRegex.test(password);
     };
 
@@ -123,15 +123,13 @@ const RegisterForm = () => {
         if (!fullName) newErrors.fullName = 'El nombre completo es requerido';
         if (!username) newErrors.username = 'El nombre de usuario es requerido';
         if (!password) newErrors.password = 'La contraseña es requerida';
-        else if (!validatePassword(password)) newErrors.password = 'Mínimo 8 caracteres, 1 número, 1 mayúscula y 1 carácter especial';
+        else if (!validatePassword(password)) newErrors.password = 'La contraseña no cumple todos los requisitos (revisa la lista)';
         if (!typeDocument) newErrors.typeDocument = 'Seleccione un tipo de documento';
         if (!documentNumber) newErrors.documentNumber = 'El número de documento es requerido';
         else if (!validateDocument(documentNumber)) newErrors.documentNumber = 'Solo números, 8-10 dígitos';
         if (!email) newErrors.email = 'El correo electrónico es requerido';
         else if (!validateEmail(email)) newErrors.email = 'Formato de email incorrecto';
-        if (!role) newErrors.role = 'Seleccione un rol de usuario';
         if (!hightSchool) newErrors.hightSchool = 'Seleccione una institución educativa';
-        if (!course) newErrors.course = 'Seleccione un curso';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -155,21 +153,25 @@ const RegisterForm = () => {
             username,
             password,
             documentNumber,
-            typeDocument,
+            documentType: typeDocument,
             email,
-            role,
-            course,
-            avatar: 'default-user.png'
+            company: hightSchool,
+            avatar: 'default-avatar.svg'
         };
 
         try {
             const response = await api.post('/api/users/create', payload);
             setResultType('success');
-            setResultMessage('¡Registro exitoso! El usuario ha sido creado correctamente.');
+            setResultMessage('¡Registro exitoso! Tu cuenta fue creada como Estudiante y está pendiente de aprobación. Un docente o administrador debe activarla antes de que puedas ingresar.');
             setResultModalVisible(true);
         } catch (error: any) {
             setResultType('error');
-            setResultMessage(error?.response?.data?.message || 'Error al crear el usuario. Intente nuevamente.');
+            // Normalizar el mensaje: NestJS puede devolver un array de errores de validación
+            const rawMessage = error?.response?.data?.message;
+            const message = Array.isArray(rawMessage)
+                ? rawMessage.join('\n')
+                : (rawMessage || 'Error al crear el usuario. Intente nuevamente.');
+            setResultMessage(message);
             setResultModalVisible(true);
         } finally {
             setLoadingForm(false);
@@ -194,11 +196,6 @@ const RegisterForm = () => {
 
     const getHightSchoolLabel = () => {
         const selected = hightSchoolOptions.find((h: any) => h._id === hightSchool);
-        return selected?.name || '';
-    };
-
-    const getCourseLabel = () => {
-        const selected = courseOptions.find((c: any) => c._id === course);
         return selected?.name || '';
     };
 
@@ -230,12 +227,13 @@ const RegisterForm = () => {
                     {/* User Illustration and Role Badge */}
                     <View style={styles.illustrationContainer}>
                         <UserIllustration size={80} />
-                        {!!role && (
-                            <View style={styles.badge}>
-                                <MaterialIcons name="verified-user" size={16} color="white" />
-                                <Text style={styles.badgeText}>{getRoleName()}</Text>
-                            </View>
-                        )}
+                        <View style={styles.badge}>
+                            <MaterialIcons name="verified-user" size={16} color="white" />
+                            <Text style={styles.badgeText}>Estudiante</Text>
+                        </View>
+                        <Text style={styles.roleNote}>
+                            Tu cuenta se creará como Estudiante y quedará pendiente de aprobación por un docente o administrador.
+                        </Text>
                     </View>
 
                     {/* Form Card */}
@@ -296,6 +294,7 @@ const RegisterForm = () => {
                                 />
                             </View>
                             {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+                            {password.length > 0 && <PasswordRequirementList password={password} />}
                         </View>
 
                         {/* Type Document */}
@@ -361,28 +360,6 @@ const RegisterForm = () => {
                             {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
                         </View>
 
-                        {/* Role */}
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Rol de usuario</Text>
-                            <View style={[styles.inputWrapper, errors.role && styles.inputError]}>
-                                <MaterialIcons name="assignment-ind" size={22} color="#0066FF" style={styles.inputIcon} />
-                                <Picker
-                                    selectedValue={role}
-                                    style={styles.picker}
-                                    onValueChange={(itemValue) => {
-                                        setRole(itemValue);
-                                        clearError('role');
-                                    }}
-                                    dropdownIconColor="#0066FF"
-                                >
-                                    {roleOptions.map((option: any, index: number) => (
-                                        <Picker.Item key={option._id || `role-${index}`} label={option.name || 'Rol'} value={option._id || ''} />
-                                    ))}
-                                </Picker>
-                            </View>
-                            {errors.role && <Text style={styles.errorText}>{errors.role}</Text>}
-                        </View>
-
                         {/* Hight School */}
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Institución educativa</Text>
@@ -393,7 +370,6 @@ const RegisterForm = () => {
                                     style={styles.picker}
                                     onValueChange={(itemValue) => {
                                         setHightSchool(itemValue);
-                                        setCourse('');
                                         clearError('hightSchool');
                                     }}
                                     dropdownIconColor="#0066FF"
@@ -405,30 +381,6 @@ const RegisterForm = () => {
                             </View>
                             {errors.hightSchool && <Text style={styles.errorText}>{errors.hightSchool}</Text>}
                         </View>
-
-                        {/* Course - only show if hightSchool is selected */}
-                        {!!hightSchool && (
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Curso</Text>
-                                <View style={[styles.inputWrapper, errors.course && styles.inputError]}>
-                                    <MaterialIcons name="class" size={22} color="#0066FF" style={styles.inputIcon} />
-                                    <Picker
-                                        selectedValue={course}
-                                        style={styles.picker}
-                                        onValueChange={(itemValue) => {
-                                            setCourse(itemValue);
-                                            clearError('course');
-                                        }}
-                                        dropdownIconColor="#0066FF"
-                                    >
-                                        {courseOptions.map((option: any, index: number) => (
-                                            <Picker.Item key={option._id || `course-${index}`} label={option.name || 'Curso'} value={option._id || ''} />
-                                        ))}
-                                    </Picker>
-                                </View>
-                                {errors.course && <Text style={styles.errorText}>{errors.course}</Text>}
-                            </View>
-                        )}
 
                         {/* Buttons */}
                         <View style={styles.buttonContainer}>
@@ -497,15 +449,11 @@ const RegisterForm = () => {
                                 </View>
                                 <View style={styles.previewRow}>
                                     <Text style={styles.previewLabel}>Rol:</Text>
-                                    <Text style={styles.previewValue}>{getRoleName()}</Text>
+                                    <Text style={styles.previewValue}>Estudiante</Text>
                                 </View>
                                 <View style={styles.previewRow}>
                                     <Text style={styles.previewLabel}>Institución:</Text>
                                     <Text style={styles.previewValue}>{getHightSchoolLabel()}</Text>
-                                </View>
-                                <View style={styles.previewRow}>
-                                    <Text style={styles.previewLabel}>Curso:</Text>
-                                    <Text style={styles.previewValue}>{getCourseLabel()}</Text>
                                 </View>
                             </View>
 
@@ -672,6 +620,34 @@ const styles = StyleSheet.create({
         color: '#FF6B6B',
         fontSize: 12,
         marginTop: 4,
+    },
+    passwordRulesContainer: {
+        marginTop: 8,
+        padding: 10,
+        backgroundColor: 'rgba(0, 102, 255, 0.08)',
+        borderRadius: 8,
+    },
+    passwordRuleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 3,
+    },
+    passwordRuleText: {
+        fontSize: 12,
+        color: '#FF6B6B',
+        marginLeft: 8,
+        flexShrink: 1,
+    },
+    passwordRuleMet: {
+        color: '#00CC00',
+    },
+    roleNote: {
+        fontSize: 12,
+        color: '#B0B0B0',
+        textAlign: 'center',
+        marginTop: 10,
+        paddingHorizontal: 16,
+        lineHeight: 16,
     },
     buttonContainer: {
         flexDirection: 'row',

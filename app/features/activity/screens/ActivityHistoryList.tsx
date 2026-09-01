@@ -114,7 +114,7 @@ const ActivityHistoryList = () => {
             case 'reto': return 'Reto';
             case 'evento_personal': return 'Personal';
             case 'actividad_pares': return 'Pares';
-            default: return type || 'General';
+            default: return type || 'Personal';
         }
     };
 
@@ -123,7 +123,7 @@ const ActivityHistoryList = () => {
             case 'reto': return '#F59E0B';
             case 'evento_personal': return '#8B5CF6';
             case 'actividad_pares': return '#10B981';
-            default: return '#6B7280';
+            default: return type ? '#6B7280' : '#8B5CF6';
         }
     };
 
@@ -169,7 +169,9 @@ const ActivityHistoryList = () => {
         );
     }
 
-    const renderActivityItem = ({ item }: { item: Activity }) => (
+    const renderActivityItem = ({ item }: { item: Activity }) => {
+        const activityType = item.type ?? 'evento_personal';
+        return (
         <TouchableOpacity style={tailwind('bg-white rounded-xl p-4 mb-3 shadow-sm')}>
             <View style={tailwind('flex-row justify-between items-start mb-3')}>
                 <View style={tailwind('flex-row items-center')}>
@@ -181,9 +183,9 @@ const ActivityHistoryList = () => {
                         </Text>
                     </View>
                 </View>
-                <View style={[tailwind('px-2 py-1 rounded-full'), { backgroundColor: getTypeColor(item.type) + '20' }]}>
-                    <Text style={[tailwind('text-xs font-medium'), { color: getTypeColor(item.type) }]}>
-                        {getTypeLabel(item.type)}
+                <View style={[tailwind('px-2 py-1 rounded-full'), { backgroundColor: getTypeColor(activityType) + '20' }]}>
+                    <Text style={[tailwind('text-xs font-medium'), { color: getTypeColor(activityType) }]}>
+                        {getTypeLabel(activityType)}
                     </Text>
                 </View>
             </View>
@@ -200,7 +202,8 @@ const ActivityHistoryList = () => {
                 </Text>
             </View>
         </TouchableOpacity>
-    );
+        );
+    };
 
     return (
         <SafeAreaView style={[styles.container, tailwind('flex-1 bg-gray-50')]}>

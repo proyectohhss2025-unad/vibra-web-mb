@@ -61,20 +61,21 @@ const ChallengesDashboard = () => {
       setError(null);
 
       const [response, participantRes] = await Promise.all([
-        ActivityService.getChallenges(userId, 1, 20),
+        ActivityService.getAvailableActivities(userId, 1, 20, 'reto'),
         api.get(`/api/participants/by-user/${userId}`).then(r => r.data).catch(() => null),
       ]);
 
       const courseId = participantRes?.currentCourse || null;
+      // El backend ya filtra por type='reto' y excluye las actividades respondidas
+      // (GET /api/activities/available/:userId?type=reto)
       const activitiesData = Array.isArray(response) ? response : (response?.data || response?.docs || []);
-      const retoActivities = activitiesData.filter((a: Activity) => a.type === 'reto');
-      setChallenges(retoActivities);
+      setChallenges(activitiesData);
 
       const completedCount = participantRes?.totalActivitiesCompleted || 0;
       setStats({
-        disponibles: retoActivities.length,
-        enProgreso: Math.max(0, retoActivities.length - completedCount),
-        completados: Math.min(completedCount, retoActivities.length),
+        disponibles: activitiesData.length,
+        enProgreso: Math.max(0, activitiesData.length - completedCount),
+        completados: Math.min(completedCount, activitiesData.length),
       });
 
       const rankingSource = courseId
